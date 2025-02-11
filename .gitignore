@@ -1,0 +1,9 @@
+.idea
+*/appsettings.json
+*/appsettings.Development.json
+*/AuthOptions.cs
+*/bin
+*/obj
+*/Logs
+*/.env
+JewelryStoreBackend.sln.DotSettings.user
