@@ -253,7 +253,10 @@ public class ProductRepository
                                 Builders<Product>.Filter.Eq(p => p.language, languageCode) &
                                 Builders<Product>.Filter.Ne(p => p.Id, product.Id);
         
-        var recommendedProducts = await _productsCollection.Find(filterRecommended).ToListAsync();
+        var recommendedProducts = await _productsCollection
+            .Find(filterRecommended)
+            .Limit(3)
+            .ToListAsync();
         
         return recommendedProducts;
     }
