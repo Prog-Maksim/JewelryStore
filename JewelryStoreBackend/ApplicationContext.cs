@@ -11,6 +11,7 @@ public class ApplicationContext: DbContext
     public DbSet<Tokens> Tokens { get; set; }
     public DbSet<ProductsSlider> ProductsSlider { get; set; }
     public DbSet<Person> Users { get; set; }
+    public DbSet<Address> Address { get; set; }
     public DbSet<Basket> Basket { get; set; }
     public DbSet<UsersLike> UsersLike { get; set; }
     
