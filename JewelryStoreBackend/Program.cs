@@ -108,6 +108,7 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoDbConnectionStr
 // Добавляем сервисы
 builder.Services.AddScoped<MessageRepository>();
 builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<WarehouseRepository>();
 
 
 // Подключаем Redis

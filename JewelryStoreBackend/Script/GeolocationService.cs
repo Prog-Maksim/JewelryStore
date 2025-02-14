@@ -1,7 +1,7 @@
-﻿using System.Net.Http.Headers;
-using JewelryStoreBackend.Models.AddressModel;
+﻿using JewelryStoreBackend.Models.GeoCoordinations;
 using Newtonsoft.Json;
-using Address = JewelryStoreBackend.Models.DB.User.Address;
+using Root = JewelryStoreBackend.Models.AddressModel.Root;
+using Route = JewelryStoreBackend.Models.GeoCoordinations.Route;
 
 namespace JewelryStoreBackend.Script;
 
@@ -22,21 +22,10 @@ public class GeolocationService
 
     public static async Task<Models.GeoCoordinations.Root?> GetGeolocateDistanceAsync(string lonStart, string latStart, string lonEnd, string latEnd)
     {
-        HttpClient client = new HttpClient();
-        
-        string url = "https://api.distance.services/api/v2/directions/get/route/v1/driving/" +
-                     $"{lonStart},{latStart};{lonEnd},{latEnd}?apiKey=JMI5pUoitWW2eyMr7y4JWk29rhLYmIQ0&midpoint=true";
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+        Leg leg = new Leg { distance = 8000 };
+        Route route = new Route { legs = new List<Leg> { leg } };
+        Models.GeoCoordinations.Root root = new() { routes = new List<Route> { route } };
 
-        request.Headers.Add("distance-token", "0C7aw48QlR#6!n#2GnEB8kSJAa2!3br2");
-
-        request.Content = new StringContent($"route%5B%5D={lonStart}%2C{latStart}&route%5B%5D={lonEnd}%2C{latEnd}");
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-
-        HttpResponseMessage response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        string responseBody = await response.Content.ReadAsStringAsync();
-
-        return JsonConvert.DeserializeObject<Models.GeoCoordinations.Root>(responseBody);
+        return root;
     }
 }
