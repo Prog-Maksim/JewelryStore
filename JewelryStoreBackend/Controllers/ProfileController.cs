@@ -7,7 +7,6 @@ using JewelryStoreBackend.Models.Request.Profile;
 using JewelryStoreBackend.Models.Response;
 using JewelryStoreBackend.Script;
 using JewelryStoreBackend.Security;
-using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

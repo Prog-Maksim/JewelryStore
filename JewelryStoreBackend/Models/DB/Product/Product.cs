@@ -42,14 +42,29 @@ public class Product
 
 public class Price
 {
+    /// <summary>
+    /// Цена товара
+    /// </summary>
     public double cost { get; set; }
     
+    /// <summary>
+    /// Значек валюты
+    /// </summary>
     public string currency { get; set; }
     
+    /// <summary>
+    /// Есть ли скидка на товар
+    /// </summary>
     public bool discount { get; set; }
     
+    /// <summary>
+    /// Процент скидки
+    /// </summary>
     public int percent { get; set; }
     
+    /// <summary>
+    /// Цена со скидкой
+    /// </summary>
     public double costDiscount { get; set; }
 }
 
