@@ -14,12 +14,11 @@ public class ApplicationContext: DbContext
     public DbSet<Address> Address { get; set; }
     public DbSet<Basket> Basket { get; set; }
     public DbSet<UsersLike> UsersLike { get; set; }
+    public DbSet<Warehouses> Warehouses { get; set; }
+    public DbSet<Coupon> Coupon { get; set; }
     
     
-    public ApplicationContext(DbContextOptions<ApplicationContext> options): base(options)
-    {
-        
-    }
+    public ApplicationContext(DbContextOptions<ApplicationContext> options): base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +31,10 @@ public class ApplicationContext: DbContext
         modelBuilder.Entity<Person>()
             .Property(p => p.Role)
             .HasConversion(v => v.ToString(), v => (Roles)Enum.Parse(typeof(Roles), v));
+        
+        modelBuilder.Entity<Coupon>()
+            .Property(p => p.Action)
+            .HasConversion(v => v.ToString(), v => (CouponAction)Enum.Parse(typeof(CouponAction), v));
 
         base.OnModelCreating(modelBuilder);
     }
