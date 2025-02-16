@@ -12,6 +12,9 @@ public class Address
     /// </summary>
     public string AddressId { get; set; }
     
+    /// <summary>
+    /// Идентификатор пользователя
+    /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string PersonId { get; set; }
     
@@ -41,15 +44,27 @@ public class Address
     /// </summary>
     public string? PostalCode { get; set; }
     
+    /// <summary>
+    /// Дата добавления
+    /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public DateTime CreateAt { get; set; }
     
+    /// <summary>
+    /// Дата обновления
+    /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public DateTime? UpdateAt { get; set; }
     
+    /// <summary>
+    /// Широта
+    /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string lat { get; set; }
     
+    /// <summary>
+    /// Долгота
+    /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string lon { get; set; }
 }

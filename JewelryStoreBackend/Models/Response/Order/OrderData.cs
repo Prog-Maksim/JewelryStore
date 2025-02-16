@@ -130,6 +130,11 @@ public class PriceOrderData
     /// Итоговая цена заказа
     /// </summary>
     public double TotalCost { get; set; }
+    
+    /// <summary>
+    /// Валюты
+    /// </summary>
+    public string Currency { get; set; }
 }
 
 public class UserOrderData
@@ -143,6 +148,12 @@ public class UserOrderData
     /// Почта пользователя
     /// </summary>
     public string Email { get; set; }
+    
+    /// <summary>
+    /// Номер телефона пользователя
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string NumberPhone { get; set; }
 }
 
 public class ShippingOrderData
@@ -170,7 +181,7 @@ public class ShippingOrderData
     /// <summary>
     /// Рассчетное время доставки заказа в днях
     /// </summary>
-    public int EstimatedDeliveryTime { get; set; }
+    public DateTime EstimatedDeliveryTime { get; set; }
     
     /// <summary>
     /// Выбранный метод доставки
