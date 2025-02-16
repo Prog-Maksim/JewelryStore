@@ -20,10 +20,10 @@ public class BaseResponse
     public bool Success { get; set; }
     
     /// <summary>
-    /// Код статуса ошибки
+    /// Статус код ответа
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public int ErrorCode { get; set; }
+    public int StatusCode { get; set; }
     
     /// <summary>
     /// Название ошибки

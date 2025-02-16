@@ -22,7 +22,7 @@ public class GeolocationService
 
     public static async Task<Models.GeoCoordinations.Root?> GetGeolocateDistanceAsync(string lonStart, string latStart, string lonEnd, string latEnd)
     {
-        Leg leg = new Leg { distance = 8000 };
+        Leg leg = new Leg { distance = 8000, duration = 1};
         Route route = new Route { legs = new List<Leg> { leg } };
         Models.GeoCoordinations.Root root = new() { routes = new List<Route> { route } };
 

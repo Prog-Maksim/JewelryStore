@@ -18,7 +18,7 @@ public class ValidateUserIpFilter: IAsyncActionFilter
             {
                 Success = false,
                 Message = "Не удалось определить IP-адрес пользователя",
-                ErrorCode = 400,
+                StatusCode = 400,
                 Error = "Bad Request"
             });
             return;

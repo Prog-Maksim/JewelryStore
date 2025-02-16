@@ -1,13 +1,26 @@
-﻿namespace JewelryStoreBackend.Script;
+﻿using JewelryStoreBackend.Models.Response.Order;
+
+namespace JewelryStoreBackend.Script;
 
 public class DeliveryCalculator
 {
-    public static double CalculateDeliveryCost(double weight, double distance, DeliveryType deliveryType)
+    public static DetailsShippingOrderData CalculateDeliveryCost(double distance, DeliveryType deliveryType)
     {
-        double weightCost = weight * DeliveryPrices.WeightRate;
         double distanceCost = distance * DeliveryPrices.KilometerRate;
 
-        return Math.Round((DeliveryPrices.BasePrice + weightCost + distanceCost) * DeliveryPrices.GetRate(deliveryType), 2);
+        var shippingPrice = Math.Round((DeliveryPrices.BasePrice + distanceCost) * DeliveryPrices.GetRate(deliveryType), 2);
+
+        DetailsShippingOrderData shippingOrderData = new DetailsShippingOrderData
+        {
+            Distance = distance,
+            DistanceCost = distanceCost,
+            ShippingBasePrice = DeliveryPrices.BasePrice,
+            DeliveryRate = DeliveryPrices.GetRate(deliveryType),
+            KilometerRate = DeliveryPrices.KilometerRate,
+            TotalCost = shippingPrice
+        };
+
+        return shippingOrderData;
     }
 }
 
@@ -15,9 +28,6 @@ public class DeliveryPrices
 {
     // Базовая стоимость доставки
     public const double BasePrice = 100;
-
-    // Коэффицент за вес, гр
-    public const double WeightRate = 2.0;
 
     // Коэффицент за километр пути, км
     public const double KilometerRate = 24.9;

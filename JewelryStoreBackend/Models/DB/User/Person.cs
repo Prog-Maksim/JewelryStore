@@ -1,4 +1,5 @@
 ﻿using JewelryStoreBackend.Enums;
+using JewelryStoreBackend.Models.DB.Order;
 using JewelryStoreBackend.Models.DB.Rating;
 using JewelryStoreBackend.Security;
 
@@ -37,6 +38,11 @@ public class Person
     public string Email { get; set; }
     
     /// <summary>
+    /// Номер телефона
+    /// </summary>
+    public string? PhoneNumber { get; set; }
+    
+    /// <summary>
     /// Пароль
     /// </summary>
     public string Password { get; set; }
@@ -66,9 +72,16 @@ public class Person
     /// </summary>
     public string IpAdressRegistration { get; set; }
     
+    /// <summary>
+    /// Состояние пользователя
+    /// </summary>
     public bool State { get; set; }
     
+    /// <summary>
+    /// Роль пользователя
+    /// </summary>
     public Roles Role { get; set; }
     
     public ICollection<UsersLike> UsersLike { get; set; }
+    public ICollection<Orders> Orders { get; set; }
 }

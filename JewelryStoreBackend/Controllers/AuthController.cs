@@ -60,9 +60,9 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
             {
                 Message = "Пользователь с данным email уже существует",
                 Error = "Forbidden",
-                ErrorCode = 403
+                StatusCode = 403
             };
-            return StatusCode(errorResponce.ErrorCode, errorResponce);
+            return StatusCode(errorResponce.StatusCode, errorResponce);
         }
 
         var user = new Person
@@ -94,7 +94,7 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
     }
 
     /// <summary>
-    /// Авторизовывает созданного пользователя
+    /// Авторизует созданного пользователя
     /// </summary>
     /// <param name="authUser">Данные пользователя</param>
     /// <returns>Успешная авторизация пользователя</returns>
@@ -131,9 +131,9 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
             {
                 Message = "Данный пользователь не найден",
                 Error = "NotFound",
-                ErrorCode = 404
+                StatusCode = 404
             };
-            return StatusCode(errorResponce.ErrorCode, errorResponce);
+            return StatusCode(errorResponce.StatusCode, errorResponce);
         }
 
         if (_passwordHasher.VerifyHashedPassword(person, person.Password, authUser.Password) !=
@@ -143,9 +143,9 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
             {
                 Message = "Логин или пароль не верен!",
                 Error = "Forbidden",
-                ErrorCode = 403
+                StatusCode = 403
             };
-            return StatusCode(errorResponce.ErrorCode, errorResponce);
+            return StatusCode(errorResponce.StatusCode, errorResponce);
         }
 
         if (!person.State)
@@ -154,9 +154,9 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
             {
                 Message = "Ваш аккаунт заблокирован!",
                 Error = "Forbidden",
-                ErrorCode = 423
+                StatusCode = 423
             };
-            return StatusCode(errorResponce.ErrorCode, errorResponce);
+            return StatusCode(errorResponce.StatusCode, errorResponce);
         }
 
         var accessToken = JwtController.GenerateJwtAccessToken(person.PersonId, person.Role);
@@ -225,9 +225,9 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
             {
                 Message = "Пользователь не найден или был заблокирован!",
                 Error = "Forbidden",
-                ErrorCode = 423
+                StatusCode = 423
             };
-            return StatusCode(errorResponce.ErrorCode, errorResponce);
+            return StatusCode(errorResponce.StatusCode, errorResponce);
         }
 
         if (await JwtController.IsTokenBannedAsync(database, user.PersonId, token))
@@ -257,11 +257,11 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
             {
                 Success = false,
                 Message = "Отказано в доступе!",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
 
         if (await JwtController.ValidateRefreshJwtToken(dataToken, user))
@@ -295,10 +295,10 @@ public class AuthController(ApplicationContext context, IConnectionMultiplexer r
         {
             Success = false,
             Message = "Не удалось проверить корректность jwt токена",
-            ErrorCode = 403,
+            StatusCode = 403,
             Error = "Forbidden"
         };
 
-        return StatusCode(errorMessage.ErrorCode, errorMessage);
+        return StatusCode(errorMessage.StatusCode, errorMessage);
     }
 }

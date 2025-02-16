@@ -42,29 +42,62 @@ public class Product
 
 public class Price
 {
+    /// <summary>
+    /// Цена товара
+    /// </summary>
     public double cost { get; set; }
     
+    /// <summary>
+    /// Значек валюты
+    /// </summary>
     public string currency { get; set; }
     
+    /// <summary>
+    /// Есть ли скидка на товар
+    /// </summary>
     public bool discount { get; set; }
     
+    /// <summary>
+    /// Процент скидки
+    /// </summary>
     public int percent { get; set; }
     
+    /// <summary>
+    /// Цена со скидкой
+    /// </summary>
     public double costDiscount { get; set; }
 }
 
 public class Specifications
 {
+    /// <summary>
+    /// Имя характеристики
+    /// </summary>
     public string Name { get; set; }
     
+    /// <summary>
+    /// Идентификатор характеристики
+    /// </summary>
     public string specificationId { get; set; }
     
+    /// <summary>
+    /// Артикул товара
+    /// </summary>
     public string sku { get; set; }
     
+    /// <summary>
+    /// Название характеристики
+    /// </summary>
     public string item { get; set; }
     
+    /// <summary>
+    /// Есть в наличие?
+    /// </summary>
     public bool inStock { get; set; }
     
+    /// <summary>
+    /// Кол-во товарав на складе
+    /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public int stockCount { get; set; }
 }

@@ -26,4 +26,9 @@ public class PersonInform
     /// Адрес пользователя
     /// </summary>
     public string? Adress { get; set; }
+    
+    /// <summary>
+    /// Номер телефона
+    /// </summary>
+    public string? PhoneNumber { get; set; }
 }

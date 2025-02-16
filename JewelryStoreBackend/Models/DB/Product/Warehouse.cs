@@ -6,15 +6,22 @@ namespace JewelryStoreBackend.Models.DB.Product;
 
 public class Warehouse
 {
-    /// <summary>
-    /// Уникальный идентификатор записи
-    /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
     
+    /// <summary>
+    /// Идентификатор товара
+    /// </summary>
     public string SKU { get; set; }
+    
+    /// <summary>
+    /// Идентификатор склада
+    /// </summary>
     public int WarehouseId { get; set; }
+    
+    /// <summary>
+    /// Кол-во товаров
+    /// </summary>
     public int Count { get; set; }
 }

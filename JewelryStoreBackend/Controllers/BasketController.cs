@@ -52,11 +52,11 @@ public class BasketController(ApplicationContext context, ProductRepository repo
             {
                 Success = false,
                 Message = "Товары не найдены в корзине",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
         
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         BasketResponse bakset = new BasketResponse
@@ -153,10 +153,10 @@ public class BasketController(ApplicationContext context, ProductRepository repo
             {
                 Success = false,
                 Message = "Товар в корзине не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(productInBasket);
@@ -237,11 +237,11 @@ public class BasketController(ApplicationContext context, ProductRepository repo
             {
                 Success = false,
                 Message = "Товар не найден в корзине!",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         if (quantity == Count.One)

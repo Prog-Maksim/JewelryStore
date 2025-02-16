@@ -23,8 +23,7 @@ public class ProductRepository
     public async Task UpdateProductAsync(string SKU, Product product)
     {
         var filter = Builders<Product>.Filter.ElemMatch(p => p.specifications, spec => spec.sku == SKU);
-
-        // Обновление всех необходимых полей
+        
         var update = Builders<Product>.Update
             .Set(p => p.title, product.title)
             .Set(p => p.onSale, product.onSale)
@@ -38,14 +37,11 @@ public class ProductRepository
             .Set(p => p.baseAdditionalInformation, product.baseAdditionalInformation)
             .Set(p => p.specifications, product.specifications)
             .Set(p => p.createTimeStamp, product.createTimeStamp);
-
-        // Обновляем все записи, которые соответствуют фильтру
+        
         var updateResult = await _productsCollection.UpdateManyAsync(filter, update);
 
         if (updateResult.ModifiedCount == 0)
-        {
-            throw new Exception($"No products found with SKU: {SKU} to update.");
-        }
+            throw new Exception($"Не найдено товаров с артикулом: {SKU} для обновления");
     }
     
     // Извлечение всех товаров
@@ -228,6 +224,22 @@ public class ProductRepository
             product.specifications = new List<Specifications> { specification };
         else
             product.specifications = new List<Specifications>();
+
+        return product;
+    }
+    
+    // Возвращает товар по id
+    public async Task<Product?> GetProductByIdAllAsync(string languageCode, string sku)
+    {
+        var filter = Builders<Product>.Filter.Eq(p => p.language, languageCode) &
+                     Builders<Product>.Filter.Eq("specifications.sku", sku);
+
+        var product = await _productsCollection
+            .Find(filter)
+            .FirstOrDefaultAsync();
+
+        if (product == null)
+            return null;
 
         return product;
     }
