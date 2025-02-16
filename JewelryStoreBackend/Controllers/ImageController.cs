@@ -38,11 +38,11 @@ public class ImageController(S3Service service): ControllerBase
             BaseResponse errorFailed = new BaseResponse
             {
                 Message = "Файл слишком большой",
-                ErrorCode = 400,
+                StatusCode = 400,
                 Error = "Bad Request",
                 Success = false
             };
-            return StatusCode(errorFailed.ErrorCode, errorFailed);
+            return StatusCode(errorFailed.StatusCode, errorFailed);
         }
         
         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
@@ -53,11 +53,11 @@ public class ImageController(S3Service service): ControllerBase
             BaseResponse errorFailed = new BaseResponse
             {
                 Message = "Неверный тип файла. Допускаются только .png и .jpg",
-                ErrorCode = 400,
+                StatusCode = 400,
                 Error = "Bad Request",
                 Success = false
             };
-            return StatusCode(errorFailed.ErrorCode, errorFailed);
+            return StatusCode(errorFailed.StatusCode, errorFailed);
         }
 
         try
@@ -75,11 +75,11 @@ public class ImageController(S3Service service): ControllerBase
             BaseResponse errorFailed = new BaseResponse
             {
                 Message = "Не удается загрузить изображение товара",
-                ErrorCode = 418,
+                StatusCode = 418,
                 Error = "I’m a teapot",
                 Success = false
             };
-            return StatusCode(errorFailed.ErrorCode, errorFailed);
+            return StatusCode(errorFailed.StatusCode, errorFailed);
         }
         catch (Exception ex)
         {
@@ -87,11 +87,11 @@ public class ImageController(S3Service service): ControllerBase
             BaseResponse errorFailed = new BaseResponse
             {
                 Message = "Произошла неизвестная ошибка",
-                ErrorCode = 500,
+                StatusCode = 500,
                 Error = "Internal Server Error",
                 Success = false
             };
-            return StatusCode(errorFailed.ErrorCode, errorFailed);
+            return StatusCode(errorFailed.StatusCode, errorFailed);
         }
     }
     
@@ -127,33 +127,33 @@ public class ImageController(S3Service service): ControllerBase
             var error = new BaseResponse
             {
                 Message = errorException.Message,
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "Not Found",
                 Success = false
             };
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         catch (FileLoadException)
         {
             var error = new BaseResponse
             {
                 Message = "Не удалось удалить файл",
-                ErrorCode = 418,
+                StatusCode = 418,
                 Error = "I am teapot",
                 Success = false
             };
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         catch (Exception)
         {
             var error = new BaseResponse
             {
                 Message = "Произошла ошибка при удалении файла",
-                ErrorCode = 500,
+                StatusCode = 500,
                 Error = "Internal Server Error",
                 Success = false
             };
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
     }
 }

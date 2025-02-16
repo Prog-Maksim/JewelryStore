@@ -30,7 +30,7 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     /// <returns></returns>
     /// <response code="200">Успешно</response>
     [Authorize]
-    [HttpPost("person")]
+    [HttpGet("person")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(PersonInform), StatusCodes.Status200OK)]
@@ -48,7 +48,8 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             Surname = user.Surname,
             Patronymic = user.Patronymic,
             Email = user.Email,
-            Adress = user.Adress
+            Adress = user.Adress,
+            PhoneNumber = user.PhoneNumber
         });
     }
     
@@ -60,10 +61,10 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     /// <response code="200">Успешное изменение пароля</response>
     /// <response code="423">Отказано в изменение пароля</response>
     [Authorize]
+    [HttpPut("password")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [HttpPut("password")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status423Locked)]
     public async Task<IActionResult> UpdatePassword(UpdatePassword updatePassword)
     {
@@ -82,11 +83,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Пароль не верен!",
-                ErrorCode = 423,
+                StatusCode = 423,
                 Error = "Locked"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
 
         user.PasswordVersion += 1;
@@ -99,7 +100,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
         context.RemoveRange(tokens);
         await context.SaveChangesAsync();
 
-        return Ok("Пароль успешно обновлен!");
+        return Ok(new BaseResponse
+        {
+            Message = "Пароль успешно обновлен!",
+            Success = true
+        });
     }
 
 
@@ -110,12 +115,12 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     /// <response code="200">Успешное</response>
     /// <response code="404">Адреса не найдены</response>
     [Authorize]
+    [HttpGet("address")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [HttpGet("address")]
     [ProducesResponseType(typeof(List<Address>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAdresses()
+    public async Task<IActionResult> GetAddresses()
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
@@ -130,11 +135,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Адреса не найдены!",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(adresses);
@@ -149,13 +154,13 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     /// <response code="400">Неверный адрес</response>
     /// <response code="451">Запрещено добавлять адреса вне России</response>
     [Authorize]
+    [HttpPost("address")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [HttpPost("address")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status451UnavailableForLegalReasons)]
-    public async Task<IActionResult> AddAdress([FromBody]AddAddress address)
+    public async Task<IActionResult> AddAddress([FromBody]AddAddress address)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
@@ -170,11 +175,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Указанный адрес неверен!",
-                ErrorCode = 400,
+                StatusCode = 400,
                 Error = "BadRequest"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
 
         Root searchAddress = results.First();
@@ -185,11 +190,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Можно добавлять только адреса в России",
-                ErrorCode = 451,
+                StatusCode = 451,
                 Error = "Unavailable For Legal Reasons"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         Address newAddress = new Address
@@ -208,7 +213,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
         await context.Address.AddAsync(newAddress);
         await context.SaveChangesAsync();
         
-        return Ok("Новый адрес успешно добавлен!");
+        return Ok(new BaseResponse
+        {
+            Message = "Новый адрес успешно добавлен!",
+            Success = true
+        });
     }
     
     /// <summary>
@@ -222,14 +231,14 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     /// <response code="400">Неверный адрес</response>
     /// <response code="451">Запрещено добавлять адреса вне России</response>
     [Authorize]
+    [HttpPut("address")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [HttpPut("address")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status451UnavailableForLegalReasons)]
-    public async Task<IActionResult> UpdateAdress([Required][FromQuery]string addressId, [FromBody]AddAddress newAddress)
+    public async Task<IActionResult> UpdateAddress([Required][FromQuery]string addressId, [FromBody]AddAddress newAddress)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
@@ -244,11 +253,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Адрес не найден!",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         List<Root>? results = await GeolocationService.GetGeolocatesAsync($"{address.Country} {address.City} {newAddress.AddressLine1}");
@@ -259,11 +268,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Указанный адрес неверен!",
-                ErrorCode = 400,
+                StatusCode = 400,
                 Error = "BadRequest"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
 
         Root searchAddress = results.First();
@@ -274,11 +283,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Можно добавлять только адреса в России",
-                ErrorCode = 451,
+                StatusCode = 451,
                 Error = "Unavailable For Legal Reasons"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         address.Country = newAddress.Country;
@@ -292,7 +301,11 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
         
         await context.SaveChangesAsync();
         
-        return Ok("Адрес успешно обновлен");
+        return Ok(new BaseResponse
+        {
+            Message = "Адрес успешно обновлен",
+            Success = true
+        });
     }
     
     /// <summary>
@@ -303,12 +316,12 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     /// <response code="200">Успешно</response>
     /// <response code="404">Адрес не найден</response>
     [Authorize]
+    [HttpDelete("address")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [HttpDelete("address")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteAdress([Required][FromQuery]string addressId)
+    public async Task<IActionResult> DeleteAddress([Required][FromQuery]string addressId)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
@@ -323,16 +336,143 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Адрес не найден!",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         context.Address.Remove(address);
         await context.SaveChangesAsync();
         
-        return Ok("Адрес успешно удален");
+        return Ok(new BaseResponse
+        {
+            Message = "Адрес успешно удален",
+            Success = true
+        });
+    }
+
+    /// <summary>
+    /// Добавляет номер телефона
+    /// </summary>
+    /// <param name="phoneNumber">Номер телефона</param>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    /// <response code="403">Не удалось добавить номер телефона</response>
+    [Authorize]
+    [HttpPost("phonenumber")]
+    [ServiceFilter(typeof(ValidateUserIpFilter))]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AddPhoneNumber([Required][FromBody] string phoneNumber)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+
+        var dataToken = JwtController.GetJwtTokenData(token);
+        
+        var checkUserPhoneNumber = await context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
+
+        if (checkUserPhoneNumber != null)
+        {
+            var error = new BaseResponse
+            {
+                Success = false,
+                Message = "Невозможно добавить номер телефона",
+                StatusCode = 403,
+                Error = "Forbidden"
+            };
+
+            return StatusCode(error.StatusCode, error);
+        }
+        
+        var person = await context.Users.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId);
+        person.PhoneNumber = phoneNumber;
+        
+        await context.SaveChangesAsync();
+        
+        return Ok(new BaseResponse
+        {
+            Message = "Номер телефона успешно добавлен!",
+            Success = true
+        });
+    }
+    
+    /// <summary>
+    /// Обновляет номер телефона
+    /// </summary>
+    /// <param name="phoneNumber">Номер телефона</param>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    /// <response code="403">Не удалось обновить номер телефона</response>
+    [Authorize]
+    [HttpPut("phonenumber")]
+    [ServiceFilter(typeof(ValidateUserIpFilter))]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UpdatePhoneNumber([Required][FromBody] string phoneNumber)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+
+        var dataToken = JwtController.GetJwtTokenData(token);
+        
+        var checkUserPhoneNumber = await context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
+
+        if (checkUserPhoneNumber != null)
+        {
+            var error = new BaseResponse
+            {
+                Success = false,
+                Message = "Невозможно обновить номер телефона",
+                StatusCode = 403,
+                Error = "Forbidden"
+            };
+
+            return StatusCode(error.StatusCode, error);
+        }
+        
+        var person = await context.Users.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId);
+        person.PhoneNumber = phoneNumber;
+        
+        await context.SaveChangesAsync();
+        
+        return Ok(new BaseResponse
+        {
+            Message = "Номер телефона успешно обновлен!",
+            Success = true
+        });
+    }
+    
+    /// <summary>
+    /// Удаляет номер телефона
+    /// </summary>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    [Authorize]
+    [HttpDelete("phonenumber")]
+    [ServiceFilter(typeof(ValidateUserIpFilter))]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeletePhoneNumber()
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+
+        var dataToken = JwtController.GetJwtTokenData(token);
+        
+        var person = await context.Users.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId);
+        person.PhoneNumber = null;
+        
+        await context.SaveChangesAsync();
+        
+        return Ok(new BaseResponse
+        {
+            Message = "Номер телефона успешно удален!",
+            Success = true
+        });
     }
 }

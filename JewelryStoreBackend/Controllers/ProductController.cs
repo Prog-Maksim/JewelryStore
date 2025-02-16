@@ -67,11 +67,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(products);
@@ -118,11 +118,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(Convert.ConvertProductWithSingleSpecification(resultSearch));
@@ -150,11 +150,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(Convert.ConvertProductWithSingleSpecification(products));
@@ -176,7 +176,7 @@ public class ProductController(ApplicationContext context, ProductRepository rep
         [Required][FromQuery] string SKU
     )
     {
-        var product = await repository.GetProductByIdAsync(languageCode, SKU);
+        var product = await repository.GetProductByIdAllAsync(languageCode, SKU);
 
         if (product == null)
         {
@@ -184,11 +184,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(product);
@@ -217,11 +217,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(products);
@@ -248,11 +248,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(Convert.ConvertProductWithSingleSpecification(products));
@@ -279,11 +279,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(Convert.ConvertProductWithSingleSpecification(products));
@@ -313,11 +313,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(Convert.ConvertProductWithSingleSpecification(products));
@@ -343,11 +343,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Цены не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(result);
@@ -377,11 +377,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Товары не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(Convert.ConvertToSimpleModel(product));
@@ -408,11 +408,11 @@ public class ProductController(ApplicationContext context, ProductRepository rep
             {
                 Success = false,
                 Message = "Категории не найдены",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(productTypes);

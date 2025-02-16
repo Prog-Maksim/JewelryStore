@@ -64,11 +64,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Товар не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         Message newMessage = new Message
@@ -142,11 +142,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Комментарий не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
 
         if (result.PersonId == dataToken.UserId || dataToken.Role == Roles.editor || dataToken.Role == Roles.admin)
@@ -157,11 +157,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "отказано в доступе",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(new SuccessfulCreatemessage
@@ -214,11 +214,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Комментарий не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         if (message.PersonId == dataToken.UserId || dataToken.Role == Roles.editor || dataToken.Role == Roles.admin)
@@ -229,11 +229,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "отказано в доступе",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         return Ok(new SuccessfulCreatemessage
@@ -280,11 +280,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "отказано в доступе",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         var comments1 = await repository.GetMessagesByProductIdAsync(SKU);
@@ -372,10 +372,10 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Данный товар не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "Not Found"
             };
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         } 
         
         return Ok(product.likes);
@@ -422,11 +422,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Данный товар не найден!",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "Not Found"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         var result = await context.UsersLike.FirstOrDefaultAsync(l => l.ProductId == SKU && l.PersonId == dataToken.UserId);
@@ -509,11 +509,11 @@ public class RatingController(ApplicationContext context,  IConnectionMultiplexe
             {
                 Success = false,
                 Message = "Данный товар не найден!",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "Not Found"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         var result = await context.UsersLike.FirstOrDefaultAsync(l => l.ProductId == SKU && l.PersonId == dataToken.UserId);

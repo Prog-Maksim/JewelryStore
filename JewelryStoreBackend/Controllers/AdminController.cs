@@ -43,11 +43,11 @@ public class AdminController(ApplicationContext context, ProductRepository repos
             {
                 Success = false,
                 Message = "отказано в доступе",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         var user = await context.Users.FirstOrDefaultAsync(u => u.PersonId == personId);
@@ -58,11 +58,11 @@ public class AdminController(ApplicationContext context, ProductRepository repos
             {
                 Success = false,
                 Message = "Пользователь не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
 
         if (user.Role == Roles.admin)
@@ -71,11 +71,11 @@ public class AdminController(ApplicationContext context, ProductRepository repos
             {
                 Success = false,
                 Message = "Данного пользователя нельзя заблокировать",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         user.State = false;
@@ -120,11 +120,11 @@ public class AdminController(ApplicationContext context, ProductRepository repos
             {
                 Success = false,
                 Message = "отказано в доступе",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         var user = await context.Users.FirstOrDefaultAsync(u => u.PersonId == personId);
@@ -135,11 +135,11 @@ public class AdminController(ApplicationContext context, ProductRepository repos
             {
                 Success = false,
                 Message = "Пользователь не найден",
-                ErrorCode = 404,
+                StatusCode = 404,
                 Error = "NotFound"
             };
 
-            return StatusCode(error.ErrorCode, error);
+            return StatusCode(error.StatusCode, error);
         }
         
         user.State = true;
