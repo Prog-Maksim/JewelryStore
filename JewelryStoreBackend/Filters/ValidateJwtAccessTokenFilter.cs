@@ -26,7 +26,7 @@ public class ValidateJwtAccessTokenFilter: IAsyncActionFilter
             {
                 Success = false,
                 Message = "Токен отсутствует или неверного формата",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             })
             {
@@ -45,7 +45,7 @@ public class ValidateJwtAccessTokenFilter: IAsyncActionFilter
             {
                 Success = false,
                 Message = "Отказано в доступе",
-                ErrorCode = 403,
+                StatusCode = 403,
                 Error = "Forbidden"
             })
             {
