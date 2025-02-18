@@ -8,17 +8,17 @@ public class RegistrationRequests: BaseResponse
     /// Время жизни токена в днях
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public int token_expires { get; set; }
+    public int TokenExpires { get; set; }
     
     /// <summary>
     /// access токен для доступа к сайту
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string access_token { get; set; }
+    public string? AccessToken { get; set; }
     
     /// <summary>
     /// Refresh токен для обновления токена
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string refresh_token { get; set; }
+    public string? RefreshToken { get; set; }
 }

@@ -1,17 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using JewelryStoreBackend.Filters;
-using JewelryStoreBackend.Models.AddressModel;
-using JewelryStoreBackend.Models.DB.User;
+using JewelryStoreBackend.Models.Other;
 using JewelryStoreBackend.Models.Request;
 using JewelryStoreBackend.Models.Request.Profile;
 using JewelryStoreBackend.Models.Response;
-using JewelryStoreBackend.Script;
+using JewelryStoreBackend.Repository.Interfaces;
 using JewelryStoreBackend.Security;
+using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
 using Address = JewelryStoreBackend.Models.DB.User.Address;
 
 namespace JewelryStoreBackend.Controllers;
@@ -20,9 +17,14 @@ namespace JewelryStoreBackend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class ProfileController(ApplicationContext context, IConnectionMultiplexer redis): ControllerBase
+public class ProfileController(AuthService authService, IUserRepository userRepository): ControllerBase
 {
-    private readonly PasswordHasher<Person> _passwordHasher = new();
+    private JwtTokenData GetUserIdFromToken()
+    {
+        var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var dataToken = JwtController.GetJwtTokenData(token);
+        return dataToken;
+    }
     
     /// <summary>
     /// Выдает информацию о пользователе
@@ -36,11 +38,8 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(PersonInform), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPersonInform()
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        var user = await context.Users.FirstOrDefaultAsync(u => u.PersonId == dataToken.UserId);
+        var dataToken = GetUserIdFromToken();
+        var user = await userRepository.GetUserByIdAsync(dataToken.UserId);
         
         return Ok(new PersonInform
         {
@@ -68,43 +67,9 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status423Locked)]
     public async Task<IActionResult> UpdatePassword(UpdatePassword updatePassword)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        var database = redis.GetDatabase();
-        
-        var user = await context.Users.FirstOrDefaultAsync(u => u.PersonId == dataToken.UserId);
-
-        if (_passwordHasher.VerifyHashedPassword(user, user.Password, updatePassword.OldPassword) !=
-            PasswordVerificationResult.Success)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Пароль не верен!",
-                StatusCode = 423,
-                Error = "Locked"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-
-        user.PasswordVersion += 1;
-        user.Password = _passwordHasher.HashPassword(user, updatePassword.NewPassword);
-        
-        var tokens = await context.Tokens.Where(p => p.PersonId == dataToken.UserId).ToListAsync();
-
-        await JwtController.AddTokensToBan(database, dataToken.UserId, tokens.Select(p => p.AccessToken).ToList());
-
-        context.RemoveRange(tokens);
-        await context.SaveChangesAsync();
-
-        return Ok(new BaseResponse
-        {
-            Message = "Пароль успешно обновлен!",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.UpdatePasswordAsync(dataToken.UserId, updatePassword);
+        return StatusCode(response.StatusCode, response);
     }
 
 
@@ -122,12 +87,8 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAddresses()
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        
-        List<Address> adresses = await context.Address.Where(a => a.PersonId == dataToken.UserId).ToListAsync();
+        var dataToken = GetUserIdFromToken();
+        var adresses = await userRepository.GetAddressesByUserIdAsync(dataToken.UserId);
         
         if (adresses.Count == 0)
         {
@@ -162,62 +123,9 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status451UnavailableForLegalReasons)]
     public async Task<IActionResult> AddAddress([FromBody]AddAddress address)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-
-        List<Root>? results = await GeolocationService.GetGeolocatesAsync($"{address.Country} {address.City} {address.AddressLine1}");
-
-        if (results == null || results.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Указанный адрес неверен!",
-                StatusCode = 400,
-                Error = "BadRequest"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-
-        Root searchAddress = results.First();
-
-        if (searchAddress.address.country != "Россия" )
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Можно добавлять только адреса в России",
-                StatusCode = 451,
-                Error = "Unavailable For Legal Reasons"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        Address newAddress = new Address
-        {
-            AddressId = Guid.NewGuid().ToString(),
-            PersonId = dataToken.UserId,
-            Country = searchAddress.address.country,
-            City = searchAddress.address.city,
-            AddressLine1 = address.AddressLine1,
-            AddressLine2 = address.AddressLine2,
-            PostalCode = searchAddress.address.postcode,
-            CreateAt = DateTime.Now,
-            lon = searchAddress.lon,
-            lat = searchAddress.lat,
-        };
-        await context.Address.AddAsync(newAddress);
-        await context.SaveChangesAsync();
-        
-        return Ok(new BaseResponse
-        {
-            Message = "Новый адрес успешно добавлен!",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.AddUserAddress(dataToken.UserId, address);
+        return StatusCode(response.StatusCode, response);
     }
     
     /// <summary>
@@ -240,72 +148,9 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status451UnavailableForLegalReasons)]
     public async Task<IActionResult> UpdateAddress([Required][FromQuery]string addressId, [FromBody]AddAddress newAddress)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-
-        var address = await context.Address.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId && p.AddressId == addressId);
-
-        if (address == null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Адрес не найден!",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        List<Root>? results = await GeolocationService.GetGeolocatesAsync($"{address.Country} {address.City} {newAddress.AddressLine1}");
-
-        if (results == null || results.Any())
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Указанный адрес неверен!",
-                StatusCode = 400,
-                Error = "BadRequest"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-
-        Root searchAddress = results.First();
-
-        if (searchAddress.address.country != "Россия" )
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Можно добавлять только адреса в России",
-                StatusCode = 451,
-                Error = "Unavailable For Legal Reasons"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        address.Country = newAddress.Country;
-        address.City = newAddress.City;
-        address.AddressLine1 = newAddress.AddressLine1;
-        address.AddressLine2 = newAddress.AddressLine2;
-        address.PostalCode = searchAddress.address.postcode;
-        address.UpdateAt = DateTime.Now;
-        address.lon = searchAddress.lon;
-        address.lat = searchAddress.lat;
-        
-        await context.SaveChangesAsync();
-        
-        return Ok(new BaseResponse
-        {
-            Message = "Адрес успешно обновлен",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.UpdateUserAddress(dataToken.UserId, addressId, newAddress);
+        return StatusCode(response.StatusCode, response);
     }
     
     /// <summary>
@@ -323,34 +168,9 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAddress([Required][FromQuery]string addressId)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        
-        var address = await context.Address.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId && p.AddressId == addressId);
-
-        if (address == null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Адрес не найден!",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        context.Address.Remove(address);
-        await context.SaveChangesAsync();
-        
-        return Ok(new BaseResponse
-        {
-            Message = "Адрес успешно удален",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.DeleteUserAddress(dataToken.UserId, addressId);
+        return StatusCode(response.StatusCode, response);
     }
 
     /// <summary>
@@ -368,36 +188,9 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddPhoneNumber([Required][FromBody] string phoneNumber)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        
-        var checkUserPhoneNumber = await context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
-
-        if (checkUserPhoneNumber != null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Невозможно добавить номер телефона",
-                StatusCode = 403,
-                Error = "Forbidden"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        var person = await context.Users.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId);
-        person.PhoneNumber = phoneNumber;
-        
-        await context.SaveChangesAsync();
-        
-        return Ok(new BaseResponse
-        {
-            Message = "Номер телефона успешно добавлен!",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, phoneNumber);
+        return StatusCode(response.StatusCode, response);
     }
     
     /// <summary>
@@ -415,36 +208,9 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> UpdatePhoneNumber([Required][FromBody] string phoneNumber)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        
-        var checkUserPhoneNumber = await context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
-
-        if (checkUserPhoneNumber != null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Невозможно обновить номер телефона",
-                StatusCode = 403,
-                Error = "Forbidden"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        var person = await context.Users.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId);
-        person.PhoneNumber = phoneNumber;
-        
-        await context.SaveChangesAsync();
-        
-        return Ok(new BaseResponse
-        {
-            Message = "Номер телефона успешно обновлен!",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, phoneNumber);
+        return StatusCode(response.StatusCode, response);
     }
     
     /// <summary>
@@ -459,20 +225,8 @@ public class ProfileController(ApplicationContext context, IConnectionMultiplexe
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeletePhoneNumber()
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        
-        var person = await context.Users.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId);
-        person.PhoneNumber = null;
-        
-        await context.SaveChangesAsync();
-        
-        return Ok(new BaseResponse
-        {
-            Message = "Номер телефона успешно удален!",
-            Success = true
-        });
+        var dataToken = GetUserIdFromToken();
+        var response = await authService.DeletePhoneNumberAsync(dataToken.UserId);
+        return StatusCode(response.StatusCode, response);
     }
 }

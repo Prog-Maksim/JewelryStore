@@ -1,14 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using JewelryStoreBackend.Enums;
-using JewelryStoreBackend.Models.DB;
 using JewelryStoreBackend.Models.Response;
+using JewelryStoreBackend.Repository;
+using JewelryStoreBackend.Repository.Interfaces;
 using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using StackExchange.Redis;
-using Convert = JewelryStoreBackend.Script.Convert;
-using Product = JewelryStoreBackend.Models.Response.Product;
 
 namespace JewelryStoreBackend.Controllers;
 
@@ -16,7 +13,7 @@ namespace JewelryStoreBackend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class ProductController(ApplicationContext context, ProductRepository repository, IConnectionMultiplexer redis): ControllerBase
+public class ProductController(IProductRepository productRepository, ProductService productService): ControllerBase
 {
     /// <summary>
     /// Возвращает товары для слайдера
@@ -29,50 +26,12 @@ public class ProductController(ApplicationContext context, ProductRepository rep
     [HttpGet("get-slider-info")]
     [ProducesResponseType(typeof(List<Product>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSliderInfo([Required][FromQuery] string languageCode)
+    public async Task<IActionResult> GetSliderInfo([Required] [FromQuery] string languageCode)
     {
-        var database = redis.GetDatabase();
-        string cacheKey = $"slider-products:{languageCode}";
+        var (response, products) = await productService.GetSliderInfo(languageCode);
         
-        var cachedData = await database.StringGetAsync(cacheKey);
-        List<ProductsSlider> sliderItem = new List<ProductsSlider>();
-        
-        if (!cachedData.IsNullOrEmpty)
-            sliderItem = JsonConvert.DeserializeObject<List<ProductsSlider>>(cachedData);
-        else
-        {
-            sliderItem = context.ProductsSlider.ToList();
-            var jsonData = JsonConvert.SerializeObject(sliderItem);
-            await database.StringSetAsync(cacheKey, jsonData, TimeSpan.FromMinutes(10));
-        }
-        
-        List<Product> products = new ();
-        
-        foreach (var item in sliderItem)
-        {
-            var result = await repository.GetProductByIdAsync(languageCode, item.SliderProductId);
-
-            if (result != null)
-            {
-                Product product = Convert.ConvertToSimpleModel(result);
-                product.ProductImageId = new List<string> { item.SliderImageId };
-            
-                products.Add(product);
-            }
-        }
-        
-        if (products.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
         return Ok(products);
     }
@@ -109,23 +68,13 @@ public class ProductController(ApplicationContext context, ProductRepository rep
         [FromQuery] Sorted? sortOrder,
         [Required][FromQuery] string languageCode)
     {
-        var resultSearch = await repository.GetProductsInSearchAsync(search, productType, minPrice, maxPrice, isSale,
+        var (response, products) = await productService.GetProductsInSearchAsync(search, productType, minPrice, maxPrice, isSale,
             isStock, isDiscount, sortOrder, sortField, languageCode);
         
-        if (resultSearch.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(Convert.ConvertProductWithSingleSpecification(resultSearch));
+        return Ok(products);
     }
     
     /// <summary>
@@ -142,22 +91,12 @@ public class ProductController(ApplicationContext context, ProductRepository rep
     public async Task<IActionResult> GetNewProduct(
         [Required][FromQuery] string languageCode)
     {
-        var products = await repository.GetNewProductsAsync(languageCode);
+        var (response, products) = await productService.GetNewProductsAsync(languageCode);
         
-        if (products.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(Convert.ConvertProductWithSingleSpecification(products));
+        return Ok(products);
     }
     
     /// <summary>
@@ -176,7 +115,7 @@ public class ProductController(ApplicationContext context, ProductRepository rep
         [Required][FromQuery] string SKU
     )
     {
-        var product = await repository.GetProductByIdAllAsync(languageCode, SKU);
+        var product = await productRepository.GetProductByIdAllAsync(languageCode, SKU);
 
         if (product == null)
         {
@@ -209,7 +148,7 @@ public class ProductController(ApplicationContext context, ProductRepository rep
         [Required][FromQuery] string targetSKU, 
         [Required][FromQuery] string languageCode)
     {
-        var products = await repository.GetRecommendedProductsAsync(languageCode, targetSKU);
+        var products = await productRepository.GetRecommendedProductsAsync(languageCode, targetSKU);
         
         if (products.Count == 0)
         {
@@ -240,22 +179,12 @@ public class ProductController(ApplicationContext context, ProductRepository rep
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPopularProducts([Required][FromQuery] string languageCode)
     {
-        var products = await repository.GetPopularProductsAsync(languageCode);
+        var (response, products) = await productService.GetPopularProductsAsync(languageCode);
         
-        if (products.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(Convert.ConvertProductWithSingleSpecification(products));
+        return Ok(products);
     }
     
     /// <summary>
@@ -271,23 +200,14 @@ public class ProductController(ApplicationContext context, ProductRepository rep
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAllProductsAsync([Required][FromQuery] string languageCode)
     {
-        var products = await repository.GetAllProductsAsync(languageCode);
+        var (response, products) = await productService.GetAllProductsSingleSpecificationsAsync(languageCode);
         
-        if (products.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(Convert.ConvertProductWithSingleSpecification(products));
+        return Ok(products);
     }
+    
     
     /// <summary>
     /// Возвращает все товары в системе по категориям
@@ -305,24 +225,15 @@ public class ProductController(ApplicationContext context, ProductRepository rep
         [Required][FromQuery] string languageCode,
         [Required][FromQuery] string category)
     {
-        var products = await repository.GetProductsByCategoryAsync(category, languageCode);
+        var (response, products) = await productService.GetProductsByCategorySingleSpecificationsAsync(category, languageCode);
         
-        if (products.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(Convert.ConvertProductWithSingleSpecification(products));
+        return Ok(products);
     }
 
+    
     /// <summary>
     /// Возвращает минимальную и максимальную цену товара 
     /// </summary>
@@ -335,23 +246,14 @@ public class ProductController(ApplicationContext context, ProductRepository rep
     [HttpGet("get-min-max-price")]
     public async Task<IActionResult> GetMinMaxPriceAsync(string languageCode)
     {
-        var result = await repository.GetMinMaxPricesAsync(languageCode);
+        var (response, products) = await productService.GetMinMaxPricesAsync(languageCode);
         
-        if (result == null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Цены не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(result);
+        return Ok(products);
     }
+    
     
     /// <summary>
     /// Возвращает товар по ID
@@ -369,24 +271,14 @@ public class ProductController(ApplicationContext context, ProductRepository rep
         [Required][FromQuery] string languageCode,
         [Required][FromQuery] string SKU)
     {
-        var product = await repository.GetProductByIdAsync(languageCode, SKU);
+        var (response, products) = await productService.GetProductByIdAsync(languageCode, SKU);
         
-        if (product == null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
         
-        return Ok(Convert.ConvertToSimpleModel(product));
+        return Ok(products);
     }
-    
+
     /// <summary>
     /// Возвращает список доступных категорий
     /// </summary>
@@ -398,9 +290,9 @@ public class ProductController(ApplicationContext context, ProductRepository rep
     [HttpGet("get-all-category")]
     [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAllCategoryAsync([Required][FromQuery] string languageCode)
+    public async Task<IActionResult> GetAllCategoryAsync([Required] [FromQuery] string languageCode)
     {
-        var productTypes = await repository.GetUniqueProductTypesAsync(languageCode);
+        var productTypes = await productRepository.GetUniqueProductTypesAsync(languageCode);
         
         if (productTypes.Count == 0)
         {

@@ -8,7 +8,7 @@ public class Product
     /// <summary>
     /// Id товара
     /// </summary>
-    public string ProductId { get; set; }
+    public required string ProductId { get; set; }
     
     /// <summary>
     /// Артикул товара

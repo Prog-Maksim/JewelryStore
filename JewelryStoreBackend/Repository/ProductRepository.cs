@@ -1,30 +1,47 @@
 ﻿using JewelryStoreBackend.Enums;
+using JewelryStoreBackend.Models.DB;
 using JewelryStoreBackend.Models.DB.Product;
+using JewelryStoreBackend.Models.DB.Rating;
+using JewelryStoreBackend.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
+using StackExchange.Redis;
 
-namespace JewelryStoreBackend.Services;
+namespace JewelryStoreBackend.Repository;
 
-public class ProductRepository
+public class ProductRepository: IProductRepository
 {
-    private readonly IMongoCollection<Product> _productsCollection;
+    private readonly IMongoCollection<ProductDB> _productsCollection;
+    private readonly ApplicationContext _context;
+    private readonly IDatabase _database;
 
-    public ProductRepository(IMongoClient mongoClient)
+    public ProductRepository(IMongoClient mongoClient, IConnectionMultiplexer redis, ApplicationContext context)
     {
         var database = mongoClient.GetDatabase("JewelryStoreDB");
-        _productsCollection = database.GetCollection<Product>("Products");
+        _productsCollection = database.GetCollection<ProductDB>("Products");
+        
+        _database = redis.GetDatabase();
+        _context = context;
     }
     
-    public async Task AddProductAsync(Product product)
+    public async Task AddProductAsync(ProductDB productDb)
     {
-        await _productsCollection.InsertOneAsync(product);
+        await _productsCollection.InsertOneAsync(productDb);
+    }
+    
+    public async Task<List<ProductDB>> GetAllProductsAsync(string languageCode)
+    {
+        var filter = Builders<ProductDB>.Filter.Eq("language", languageCode);
+        return await _productsCollection.Find(filter).ToListAsync();
     }
 
-    public async Task UpdateProductAsync(string SKU, Product product)
+    public async Task UpdateProductAsync(string SKU, ProductDB product)
     {
-        var filter = Builders<Product>.Filter.ElemMatch(p => p.specifications, spec => spec.sku == SKU);
+        var filter = Builders<ProductDB>.Filter.ElemMatch(p => p.specifications, spec => spec.sku == SKU);
         
-        var update = Builders<Product>.Update
+        var update = Builders<ProductDB>.Update
             .Set(p => p.title, product.title)
             .Set(p => p.onSale, product.onSale)
             .Set(p => p.categories, product.categories)
@@ -39,20 +56,31 @@ public class ProductRepository
             .Set(p => p.createTimeStamp, product.createTimeStamp);
         
         var updateResult = await _productsCollection.UpdateManyAsync(filter, update);
-
+    
         if (updateResult.ModifiedCount == 0)
             throw new Exception($"Не найдено товаров с артикулом: {SKU} для обновления");
     }
-    
-    // Извлечение всех товаров
-    public async Task<List<Product>> GetAllProductsAsync(string languageCode)
-    {
-        var filter = Builders<Product>.Filter.Eq("language", languageCode);
-        
-        return await _productsCollection.Find(filter).ToListAsync();
-    }
 
-    public async Task<List<Product>> GetProductsInSearchAsync(
+    public async Task<List<ProductsSlider>> GetProductInSliderAsync(string languageCode)
+    {
+        string cacheKey = $"slider-products:{languageCode}";
+        
+        var cachedData = await _database.StringGetAsync(cacheKey);
+        List<ProductsSlider> sliderItem = new List<ProductsSlider>();
+        
+        if (!cachedData.IsNullOrEmpty)
+            sliderItem = JsonConvert.DeserializeObject<List<ProductsSlider>>(cachedData);
+        else
+        {
+            sliderItem = _context.ProductsSlider.ToList();
+            var jsonData = JsonConvert.SerializeObject(sliderItem);
+            await _database.StringSetAsync(cacheKey, jsonData, TimeSpan.FromMinutes(10));
+        }
+
+        return sliderItem;
+    }
+    
+    public async Task<List<ProductDB>> GetProductsInSearchAsync(
         string? search,
         string? productType,
         double? minPrice,
@@ -64,8 +92,8 @@ public class ProductRepository
         SortedParameter? sortField,
         string languageCode)
     {
-        var filterBuilder = Builders<Product>.Filter;
-        var filters = new List<FilterDefinition<Product>>();
+        var filterBuilder = Builders<ProductDB>.Filter;
+        var filters = new List<FilterDefinition<ProductDB>>();
         
         filters.Add(filterBuilder.Eq(p => p.language, languageCode));
         
@@ -75,39 +103,39 @@ public class ProductRepository
                 filterBuilder.Regex(p => p.title, new BsonRegularExpression(search, "i"))
             ));
         }
-
+    
         // Фильтр по типу продукта
         if (!string.IsNullOrEmpty(productType))
             filters.Add(filterBuilder.Eq(p => p.productType, productType));
-
+    
         // Фильтр по цене
         if (minPrice.HasValue)
             filters.Add(filterBuilder.Gte(p => p.price.cost, minPrice.Value));
         if (maxPrice.HasValue)
             filters.Add(filterBuilder.Lte(p => p.price.cost, maxPrice.Value));
-
+    
         // Фильтр по распродаже
         if (isSale.HasValue)
             filters.Add(filterBuilder.Eq(p => p.onSale, isSale.Value));
-
+    
         // Фильтр по наличию
         if (isStock.HasValue && isStock.Value)
             filters.Add(filterBuilder.ElemMatch(p => p.specifications, s => s.inStock));
-
+    
         // Фильтр по скидке
         if (isDiscount.HasValue && isDiscount.Value)
             filters.Add(filterBuilder.Eq(p => p.price.discount, true));
-
+    
         var combinedFilter = filters.Count > 0 ? filterBuilder.And(filters) : filterBuilder.Empty;
-
+    
         // Сортировка
-        var sortBuilder = Builders<Product>.Sort;
-        SortDefinition<Product>? sortDefinition = null;
-
+        var sortBuilder = Builders<ProductDB>.Sort;
+        SortDefinition<ProductDB>? sortDefinition = null;
+    
         if (sortField.HasValue)
         {
             var isAscending = sortOrder == Sorted.asc;
-
+    
             sortDefinition = sortField switch
             {
                 SortedParameter.price => isAscending ? sortBuilder.Ascending(p => p.price.cost) : sortBuilder.Descending(p => p.price.cost),
@@ -115,155 +143,135 @@ public class ProductRepository
                 _ => null
             };
         }
-
+    
         // Применение фильтров и сортировки
         var query = _productsCollection.Find(combinedFilter);
         if (sortDefinition != null)
         {
             query = query.Sort(sortDefinition);
         }
-
+    
         var products = await query.ToListAsync();
         return products;
     }
     
-    // Извлечение всех категорий товаров
+    
     public async Task<List<string>> GetUniqueProductTypesAsync(string languageCode)
     {
-        var filter = Builders<Product>.Filter.Eq("language", languageCode);
+        var filter = Builders<ProductDB>.Filter.Eq("language", languageCode);
     
         var productTypes = await _productsCollection
             .Distinct<string>("productType", filter)
             .ToListAsync();
-
+    
         return productTypes;
     }
     
     
-    // Возвращает максимальную и минимальную цену товаров
-    public async Task<MinMaxPrice?> GetMinMaxPricesAsync(string languageCode)
+    public async Task<(ProductDB minProduct, ProductDB maxProduct)> GetMinMaxPricesAsync(string languageCode)
     {
-        var filter = Builders<Product>.Filter.Eq("language", languageCode);
+        var filter = Builders<ProductDB>.Filter.Eq("language", languageCode);
         
         // Получаем минимальную цену
         var minProduct = await _productsCollection
             .Find(filter)
-            .Sort(Builders<Product>.Sort.Ascending(p => p.price.cost))
+            .Sort(Builders<ProductDB>.Sort.Ascending(p => p.price.cost))
             .Limit(1)
             .FirstOrDefaultAsync();
         
         var maxProduct = await _productsCollection
             .Find(filter)
-            .Sort(Builders<Product>.Sort.Descending(p => p.price.cost))
+            .Sort(Builders<ProductDB>.Sort.Descending(p => p.price.cost))
             .Limit(1)
             .FirstOrDefaultAsync();
-        
-        var minPrice = minProduct?.price?.cost ?? -1;
-        var maxPrice = maxProduct?.price?.cost ?? -1;
 
-        if (maxPrice == -1 || minPrice == -1)
-            return null;
-        
-        return new MinMaxPrice
-        {
-            minPrice = minPrice,
-            maxPrice = maxPrice,
-            currency = maxProduct.price.currency
-        };
+        return (minProduct, maxProduct);
     }
     
-    
-    // Получение всех товаров по категории и языковому коду
-    public async Task<List<Product>> GetProductsByCategoryAsync(string category, string languageCode)
+    public async Task<List<ProductDB>> GetProductsByCategoryAsync(string category, string languageCode)
     {
-        var filter = Builders<Product>.Filter.Eq(p => p.productType, category) &
-            Builders<Product>.Filter.Where(p => languageCode == p.language);
-
+        var filter = Builders<ProductDB>.Filter.Eq(p => p.productType, category) &
+            Builders<ProductDB>.Filter.Where(p => languageCode == p.language);
+    
         var products = await _productsCollection
             .Find(filter)
             .ToListAsync();
-
+    
         return products;
     }
     
     
-    // Получение всех новых товаров, добавленных за последние 2 недели
-    public async Task<List<Product>> GetNewProductsAsync(string languageCode)
+    public async Task<List<ProductDB>> GetNewProductsAsync(string languageCode)
     {
         var twoWeeksAgo = DateTime.UtcNow.AddDays(-14);
-
-        var filter = Builders<Product>.Filter.Gt(p => p.createTimeStamp, twoWeeksAgo) &
-                     Builders<Product>.Filter.Eq(p => p.language, languageCode);
-
+    
+        var filter = Builders<ProductDB>.Filter.Gt(p => p.createTimeStamp, twoWeeksAgo) &
+                     Builders<ProductDB>.Filter.Eq(p => p.language, languageCode);
+    
         var newProducts = await _productsCollection
             .Find(filter)
             .ToListAsync();
-
+    
         return newProducts;
     }
-
     
-    // Возвращает товар по id
-    public async Task<Product?> GetProductByIdAsync(string languageCode, string sku)
+    
+    public async Task<ProductDB?> GetProductByIdAsync(string languageCode, string sku)
     {
-        var filter = Builders<Product>.Filter.Eq(p => p.language, languageCode) &
-                     Builders<Product>.Filter.Eq("specifications.sku", sku);
-
+        var filter = Builders<ProductDB>.Filter.Eq(p => p.language, languageCode) &
+                     Builders<ProductDB>.Filter.Eq("specifications.sku", sku);
+    
         var product = await _productsCollection
             .Find(filter)
             .FirstOrDefaultAsync();
-
+    
         if (product == null)
             return null;
-
-        // Проверяем, что объект specifications соответствует SKU
+        
         var specification = product.specifications?
             .FirstOrDefault(spec => spec.sku == sku);
-
+    
         if (specification != null)
             product.specifications = new List<Specifications> { specification };
         else
             product.specifications = new List<Specifications>();
-
+    
         return product;
     }
     
-    // Возвращает товар по id
-    public async Task<Product?> GetProductByIdAllAsync(string languageCode, string sku)
+    public async Task<ProductDB?> GetProductByIdAllAsync(string languageCode, string sku)
     {
-        var filter = Builders<Product>.Filter.Eq(p => p.language, languageCode) &
-                     Builders<Product>.Filter.Eq("specifications.sku", sku);
-
+        var filter = Builders<ProductDB>.Filter.Eq(p => p.language, languageCode) &
+                     Builders<ProductDB>.Filter.Eq("specifications.sku", sku);
+    
         var product = await _productsCollection
             .Find(filter)
             .FirstOrDefaultAsync();
-
+    
         if (product == null)
             return null;
-
+    
         return product;
     }
     
-    
-    // Возвращает все рекоммендованные товары
-    public async Task<List<Product>> GetRecommendedProductsAsync(string languageCode, string sku)
+    public async Task<List<ProductDB>> GetRecommendedProductsAsync(string languageCode, string sku)
     {
-        var filter = Builders<Product>.Filter.Eq(p => p.language, languageCode) &
-                     Builders<Product>.Filter.Eq("specifications.sku", sku);
-
+        var filter = Builders<ProductDB>.Filter.Eq(p => p.language, languageCode) &
+                     Builders<ProductDB>.Filter.Eq("specifications.sku", sku);
+    
         var product = await _productsCollection
             .Find(filter)
             .FirstOrDefaultAsync();
         
         if (product == null)
-            return new List<Product>();
+            return new List<ProductDB>();
         
         
         var productType = product.productType;
         
-        var filterRecommended = Builders<Product>.Filter.Eq(p => p.productType, productType) &
-                                Builders<Product>.Filter.Eq(p => p.language, languageCode) &
-                                Builders<Product>.Filter.Ne(p => p.Id, product.Id);
+        var filterRecommended = Builders<ProductDB>.Filter.Eq(p => p.productType, productType) &
+                                Builders<ProductDB>.Filter.Eq(p => p.language, languageCode) &
+                                Builders<ProductDB>.Filter.Ne(p => p.Id, product.Id);
         
         var recommendedProducts = await _productsCollection
             .Find(filterRecommended)
@@ -274,21 +282,42 @@ public class ProductRepository
     }
     
     
-    // Вовзвращает все популярные товары
-    public async Task<List<Product>> GetPopularProductsAsync(string languageCode)
+    public async Task<List<ProductDB>> GetPopularProductsAsync(string languageCode)
     {
-        var filter = Builders<Product>.Filter.Eq(p => p.language, languageCode);
+        var filter = Builders<ProductDB>.Filter.Eq(p => p.language, languageCode);
         
-        var sort = Builders<Product>.Sort.Descending(p => p.likes);
+        var sort = Builders<ProductDB>.Sort.Descending(p => p.likes);
         var popularProducts = await _productsCollection.Find(filter)
             .Sort(sort)
             .Limit(9)
             .ToListAsync();
-
+    
         return popularProducts;
     }
-    
-    
+
+
+    public async Task<UsersLike?> GetLikesAsync(string userId, string sku)
+    {
+        var result = await _context.UsersLike.FirstOrDefaultAsync(l => l.ProductId == sku && l.PersonId == userId);
+        return result;
+    }
+
+    public async Task AddLikeAsync(UsersLike like)
+    {
+        await _context.UsersLike.AddAsync(like);
+    }
+
+    public void RemoveLikeAsync(UsersLike like)
+    {
+        _context.Remove(like);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
+
+
     public class MinMaxPrice
     {
         public double minPrice { get; set; }

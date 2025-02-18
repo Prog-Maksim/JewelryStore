@@ -19,10 +19,10 @@ public class JwtController
         
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, userId),
-            new Claim(ClaimTypes.Role, role.ToString()),
-            new Claim("token_type", TokenType.access.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, jti),
+            new (ClaimTypes.Name, userId),
+            new (ClaimTypes.Role, role.ToString()),
+            new ("token_type", TokenType.access.ToString()),
+            new (JwtRegisteredClaimNames.Jti, jti),
         };
 
         var jwt = new JwtSecurityToken(
@@ -42,11 +42,11 @@ public class JwtController
         
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, userId),
-            new Claim(ClaimTypes.Role, role.ToString()),
-            new Claim("token_type", TokenType.refresh.ToString()),
-            new Claim("version", passwordVersion.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, jti)
+            new (ClaimTypes.Name, userId),
+            new (ClaimTypes.Role, role.ToString()),
+            new ("token_type", TokenType.refresh.ToString()),
+            new ("version", passwordVersion.ToString()),
+            new (JwtRegisteredClaimNames.Jti, jti)
         };
         
         var jwt = new JwtSecurityToken(
@@ -70,8 +70,8 @@ public class JwtController
         var jwtToken = handler.ReadJwtToken(token);
         
         var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-        var token_type = jwtToken.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
-        var tokenType = Enum.Parse<TokenType>(token_type);
+        var tokenType = jwtToken.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
+        var tokenTypeEnum = Enum.Parse<TokenType>(tokenType);
         var roles = Enum.Parse<Roles>(jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value);
         var versionClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "version")?.Value;
         var jti = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
@@ -83,15 +83,15 @@ public class JwtController
         return new JwtTokenData
         {
             UserId = userId,
-            TokenType = tokenType,
+            TokenType = tokenTypeEnum,
             Version = version,
             Jti = jti,
             Token = token,
             Role = roles
         };
     }
-
-    public static async Task<bool> ValidateRefreshJwtToken(JwtTokenData token, Person user)
+    
+    public static bool ValidateRefreshJwtToken(JwtTokenData token, Person user)
     {
         if (token.TokenType != TokenType.refresh)
             return false;

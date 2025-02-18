@@ -11,7 +11,7 @@ public class S3Service
 
     public S3Service()
     {
-        var accessKey =Environment.GetEnvironmentVariable("ACCESS_KEY");
+        var accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY");
         
         var endpoint = new Uri("https://storage.yandexcloud.net"); 

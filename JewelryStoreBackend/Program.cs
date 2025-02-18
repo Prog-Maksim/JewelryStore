@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 using dotenv.net;
 using JewelryStoreBackend;
 using JewelryStoreBackend.Filters;
+using JewelryStoreBackend.Repository;
+using JewelryStoreBackend.Repository.Interfaces;
 using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -27,8 +29,24 @@ var builder = WebApplication.CreateBuilder(args);
 // Регистрация фильтров
 builder.Services.AddScoped<ValidateUserIpFilter>();
 builder.Services.AddScoped<ValidateJwtAccessTokenFilter>();
-builder.Services.AddScoped<AuthorizationService>();
 
+// Регистрация Сервисов
+builder.Services.AddScoped<AuthorizationService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<BasketService>();
+
+// Регистрация репозиториев
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+builder.Services.AddScoped<ICouponRepository, CouponRepository>();
+
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<WarehouseRepository>();
 
 // Логгирование
 builder.Services.AddLogging(config =>
@@ -45,12 +63,9 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
-builder.Host.ConfigureLogging(logging =>
-{
-    logging.AddSerilog();
-    logging.SetMinimumLevel(LogLevel.Error);
-}).UseSerilog();
-
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Error);
+builder.Logging.AddSerilog();
 
 // Swagger
 builder.Services.AddApiVersioning(options =>
@@ -103,12 +118,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 var mongoDbConnectionString = builder.Configuration.GetConnectionString("MongoDBConnection");
 builder.Services.AddSingleton(new MongoClient(mongoDbConnectionString));
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoDbConnectionString));
-
-
-// Добавляем сервисы
-builder.Services.AddScoped<MessageRepository>();
-builder.Services.AddScoped<ProductRepository>();
-builder.Services.AddScoped<WarehouseRepository>();
 
 
 // Подключаем Redis

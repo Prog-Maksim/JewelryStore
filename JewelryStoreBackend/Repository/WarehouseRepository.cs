@@ -1,7 +1,7 @@
 ﻿using JewelryStoreBackend.Models.DB.Product;
 using MongoDB.Driver;
 
-namespace JewelryStoreBackend.Services;
+namespace JewelryStoreBackend.Repository;
 
 public class WarehouseRepository
 {

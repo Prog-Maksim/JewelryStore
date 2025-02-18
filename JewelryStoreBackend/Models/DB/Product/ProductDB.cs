@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace JewelryStoreBackend.Models.DB.Product;
 
-public class Product
+public class ProductDB
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

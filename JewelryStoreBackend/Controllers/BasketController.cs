@@ -2,16 +2,13 @@
 using JewelryStoreBackend.Enums;
 using JewelryStoreBackend.Filters;
 using JewelryStoreBackend.Models.DB;
+using JewelryStoreBackend.Models.Other;
 using JewelryStoreBackend.Models.Response;
 using JewelryStoreBackend.Models.Response.Basket;
-using JewelryStoreBackend.Models.Response.ProductStructure;
-using JewelryStoreBackend.Script;
 using JewelryStoreBackend.Security;
 using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
 
 namespace JewelryStoreBackend.Controllers;
 
@@ -19,8 +16,15 @@ namespace JewelryStoreBackend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class BasketController(ApplicationContext context, ProductRepository repository, IConnectionMultiplexer redis): ControllerBase
+public class BasketController(BasketService basketService): ControllerBase
 {
+    private JwtTokenData GetUserIdFromToken()
+    {
+        var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var dataToken = JwtController.GetJwtTokenData(token);
+        return dataToken;
+    }
+    
     /// <summary>
     /// Возвращает все товары в корзине
     /// </summary>
@@ -40,86 +44,12 @@ public class BasketController(ApplicationContext context, ProductRepository repo
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductInBasket([Required][FromQuery] string languageCode)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        var productInBasket = await context.Basket.Where(p => p.PersonId == dataToken.UserId).ToListAsync();
+        var dataToken = GetUserIdFromToken();
+        var (response, result) = await basketService.GetProductInBasket(dataToken.UserId, languageCode);
         
-        if (productInBasket.Count == 0)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товары не найдены в корзине",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-        
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        BasketResponse bakset = new BasketResponse
-        {
-            Quantity = productInBasket.Count,
-            Subtotal = productInBasket.Select(p => p.Count).Sum(),
-        };
-        
-        Price priceBasket = new Price();
-        
-        List<Productions> products = new List<Productions>();
-        
-        foreach (var item in productInBasket)
-        {
-            var product = await repository.GetProductByIdAsync(languageCode, item.ProductId);
-
-            PriceProduction price = new PriceProduction
-            {
-                cost = product.price.cost,
-                currency = product.price.currency,
-                discount = product.price.discount,
-                costDiscount = product.price.costDiscount,
-                percent = product.price.percent,
-            };
-        
-            Productions productModel = new Productions
-            {
-                languageCode = languageCode,
-                ProductId = product.productId,
-                SKU = item.ProductId,
-                Title = product.title,
-                Description = product.description,
-                Images = product.images,
-                Quantity = item.Count,
-                OnSale = product.onSale,
-                InStock = product.specifications.First().inStock,
-                Likes = product.likes,
-                PriceProduction = price,
-            };
-        
-            priceBasket.Currency = productModel.PriceProduction.currency;
-            priceBasket.Cost += productModel.PriceProduction.cost;
-            priceBasket.CostDiscount += productModel.PriceProduction.costDiscount;
-            
-            products.Add(productModel);
-        }
-        
-        if (priceBasket.Cost == priceBasket.CostDiscount)
-        {
-            priceBasket.Discount = false;
-            priceBasket.Percent = 0;
-        }
-        else
-        {
-            priceBasket.Discount = true;
-            int discountPercentage = CostCalculation.CalculateDiscountPercentage(priceBasket.Cost, priceBasket.CostDiscount);
-            priceBasket.Percent = discountPercentage;
-        }
-        
-        bakset.TotalPrice = priceBasket;
-        bakset.Productions = products;
-        
-        return Ok(bakset);
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        return Ok(result);
     }
 
     /// <summary>
@@ -141,25 +71,12 @@ public class BasketController(ApplicationContext context, ProductRepository repo
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckProductInBasket([Required][FromQuery] string productId)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        var productInBasket = await context.Basket.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId && p.ProductId == productId);
-
-        if (productInBasket == null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товар в корзине не найден",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-            return StatusCode(error.StatusCode, error);
-        }
+        var dataToken = GetUserIdFromToken();
+        var (response, result) = await basketService.CheckProductInBasket(dataToken.UserId, productId);
         
-        return Ok(productInBasket);
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        return Ok(result);
     }
     
     /// <summary>
@@ -170,39 +87,20 @@ public class BasketController(ApplicationContext context, ProductRepository repo
     /// <returns></returns>
     /// <response code="200">Успешно</response>
     /// <response code="400">Невозможно определить IP адрес пользователя</response>
+    /// <response code="400">Введено отрицательное число в quantity</response>
     /// <response code="403">Некорректный токен</response>
     [Authorize]
     [HttpPost("product")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> AddProductInBasket([Required][FromQuery] string productId, [FromQuery] int? quantity = 1)
+    public async Task<IActionResult> AddProductInBasket([Required][FromQuery] string productId, [FromQuery] int quantity = 1)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        var productInBasket = await context.Basket.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId && p.ProductId == productId);
-
-        if (productInBasket != null)
-            productInBasket.Count += quantity ?? 1;
-        else
-        {
-            Basket basket = new Basket
-            {
-                PersonId = dataToken.UserId,
-                ProductId = productId,
-                Count = quantity ?? 1,
-                DateAdded = DateTime.Now,
-            };
-
-            await context.Basket.AddAsync(basket);
-        }
-        await context.SaveChangesAsync();
-        
-        return Ok("Товар(ы) успешно добавлен в корзину");
+        var dataToken = GetUserIdFromToken();
+        var result = await basketService.AddProductInBasket(dataToken.UserId, productId, quantity);
+        return StatusCode(result.StatusCode, result);
     }
     
     /// <summary>
@@ -219,38 +117,14 @@ public class BasketController(ApplicationContext context, ProductRepository repo
     [HttpDelete("product")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProductInBasket([Required][FromQuery] string productId, [Required][FromQuery] Count quantity)
     {
-        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
-        var token = authHeader.Substring("Bearer ".Length);
-
-        var dataToken = JwtController.GetJwtTokenData(token);
-        var productInBasket = await context.Basket.FirstOrDefaultAsync(p => p.PersonId == dataToken.UserId && p.ProductId == productId);
-
-        if (productInBasket == null)
-        {
-            var error = new BaseResponse
-            {
-                Success = false,
-                Message = "Товар не найден в корзине!",
-                StatusCode = 404,
-                Error = "NotFound"
-            };
-
-            return StatusCode(error.StatusCode, error);
-        }
-        
-        if (quantity == Count.One)
-            productInBasket.Count -= 1;
-        if (quantity == Count.All || productInBasket.Count <= 0)
-            context.Basket.Remove(productInBasket);
-        
-        await context.SaveChangesAsync();
-        
-        return Ok("Товар успешно удален из корзины");
+        var dataToken = GetUserIdFromToken();
+        var result = await basketService.DeleteProductInBasket(dataToken.UserId, productId, quantity);
+        return StatusCode(result.StatusCode, result);
     }
 }
