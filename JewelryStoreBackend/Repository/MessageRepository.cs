@@ -1,10 +1,11 @@
 ﻿using JewelryStoreBackend.Enums;
 using JewelryStoreBackend.Models.DB.Rating;
+using JewelryStoreBackend.Repository.Interfaces;
 using MongoDB.Driver;
 
-namespace JewelryStoreBackend.Services;
+namespace JewelryStoreBackend.Repository;
 
-public class MessageRepository
+public class MessageRepository: IMessageRepository
 {
     private readonly IMongoCollection<Message> _messagesCollection;
 
@@ -20,10 +21,10 @@ public class MessageRepository
         return message.Id;
     }
     
-    public async Task UpdateMessageAsync(string produtId, string messageId, string newText, int newRating)
+    public async Task UpdateMessageAsync(string produсtId, string messageId, string newText, int newRating)
     {
         var filter = Builders<Message>.Filter.And(
-            Builders<Message>.Filter.Eq(m => m.ProdutId, produtId),
+            Builders<Message>.Filter.Eq(m => m.ProdutId, produсtId),
             Builders<Message>.Filter.Eq(m => m.MessageId, messageId)
         );
 

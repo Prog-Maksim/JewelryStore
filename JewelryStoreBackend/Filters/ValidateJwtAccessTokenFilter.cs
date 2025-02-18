@@ -1,5 +1,6 @@
 ﻿using JewelryStoreBackend.Models.Response;
 using JewelryStoreBackend.Security;
+using JewelryStoreBackend.Repository;
 using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;

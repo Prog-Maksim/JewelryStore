@@ -25,6 +25,6 @@ public class JwtTokenData
     public int Version { get; set; }
     
 
-    public string Jti { get; set; }
+    public string? Jti { get; set; }
     public string Token { get; set; }
 }

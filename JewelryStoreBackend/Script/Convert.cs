@@ -5,58 +5,53 @@ namespace JewelryStoreBackend.Script;
 
 public class Convert
 {
-    public static Models.Response.Product ConvertToSimpleModel(Product product)
+    public static Models.Response.Product ConvertToSimpleModel(ProductDB productDb)
     {
         return new Models.Response.Product
         {
-            ProductId = product.productId,
-            SKU = product.specifications.FirstOrDefault()?.sku ?? string.Empty,
-            Title = product.title,
-            InStock = product.specifications.FirstOrDefault()?.inStock ?? false, 
-            OnSale = product.onSale,
+            ProductId = productDb.productId,
+            SKU = productDb.specifications.FirstOrDefault()?.sku ?? string.Empty,
+            Title = productDb.title,
+            InStock = productDb.specifications.FirstOrDefault()?.inStock ?? false, 
+            OnSale = productDb.onSale,
             Price = new Price
             {
-                Cost = product.price.cost,
-                Currency = product.price.currency,
-                Discount = product.price.discount,
-                Percent = product.price.percent,
-                CostDiscount = product.price.costDiscount
+                Cost = productDb.price.cost,
+                Currency = productDb.price.currency,
+                Discount = productDb.price.discount,
+                Percent = productDb.price.percent,
+                CostDiscount = productDb.price.costDiscount
             }
         };
     }
     
-    public static List<Models.Response.Product> ConvertToSimplifiedModel(List<Product> products)
-    {
-        return products.Select(ConvertToSimpleModel).ToList();
-    }
-    
     // Метод для преобразования продукта, удаляя все Specifications и оставляя одну
-    public static Product ConvertProductWithSingleSpecification(Product product, string? sku = null)
+    public static ProductDB ConvertProductWithSingleSpecification(ProductDB productDb, string? sku = null)
     {
-        if (product.specifications == null || !product.specifications.Any())
-            return product;
+        if (productDb.specifications == null || !productDb.specifications.Any())
+            return productDb;
         
         if (!string.IsNullOrEmpty(sku))
         {
-            var specification = product.specifications.FirstOrDefault(spec => spec.sku == sku);
+            var specification = productDb.specifications.FirstOrDefault(spec => spec.sku == sku);
 
             if (specification != null)
-                product.specifications = new List<Specifications> { specification };
+                productDb.specifications = new List<Specifications> { specification };
             else
-                product.specifications = new List<Specifications>();
+                productDb.specifications = new List<Specifications>();
         }
         else
         {
-            var firstSpecification = product.specifications.First();
-            product.specifications = new List<Specifications> { firstSpecification };
+            var firstSpecification = productDb.specifications.First();
+            productDb.specifications = new List<Specifications> { firstSpecification };
         }
 
-        return product;
+        return productDb;
     }
 
-    public static List<Product> ConvertProductWithSingleSpecification(List<Product> products)
+    public static List<ProductDB> ConvertProductWithSingleSpecification(List<ProductDB> products)
     {
-        List<Product> productsUpdate = new List<Product>();
+        List<ProductDB> productsUpdate = new List<ProductDB>();
 
         foreach (var product in products)
             productsUpdate.Add(ConvertProductWithSingleSpecification(product));

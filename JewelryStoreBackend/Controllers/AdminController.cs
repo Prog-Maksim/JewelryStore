@@ -5,12 +5,11 @@ using JewelryStoreBackend.Models.DB.Product;
 using JewelryStoreBackend.Models.Request;
 using JewelryStoreBackend.Models.Response;
 using JewelryStoreBackend.Security;
-using JewelryStoreBackend.Services;
+using JewelryStoreBackend.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
-using Product = JewelryStoreBackend.Models.DB.Product.Product;
 
 namespace JewelryStoreBackend.Controllers;
 
@@ -169,7 +168,7 @@ public class AdminController(ApplicationContext context, ProductRepository repos
         
         string productId = rnd.Next(111111111, 999999999).ToString();
         
-        Product product = new Product
+        ProductDB productDb = new ProductDB
         {
             productId = productId,
             language = addProduct.Language,
@@ -205,12 +204,12 @@ public class AdminController(ApplicationContext context, ProductRepository repos
                 specs.Add(specifications);
             }
             
-            product.specifications = specs;
+            productDb.specifications = specs;
         }
         else
-            product.specifications = null;
+            productDb.specifications = null;
         
-        await repository.AddProductAsync(product);
+        await repository.AddProductAsync(productDb);
         
         return Ok();
     }

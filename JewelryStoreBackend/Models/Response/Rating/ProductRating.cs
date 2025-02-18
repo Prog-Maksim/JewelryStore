@@ -1,6 +1,6 @@
 ﻿namespace JewelryStoreBackend.Models.Response.Rating;
 
-public class ProductRating
+public class ProductRating: BaseResponse
 {
     /// <summary>
     /// Средний рейтинг товара

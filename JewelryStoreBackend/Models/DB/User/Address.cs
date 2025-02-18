@@ -68,4 +68,3 @@ public class Address
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string lon { get; set; }
 }
-
