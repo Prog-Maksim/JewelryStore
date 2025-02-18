@@ -18,13 +18,13 @@ public class MessageRepository: IMessageRepository
     public async Task<string> AddMessageAsync(Message message)
     {
         await _messagesCollection.InsertOneAsync(message);
-        return message.Id;
+        return message.MessageId;
     }
     
-    public async Task UpdateMessageAsync(string produсtId, string messageId, string newText, int newRating)
+    public async Task UpdateMessageAsync(string productId, string messageId, string newText, int newRating)
     {
         var filter = Builders<Message>.Filter.And(
-            Builders<Message>.Filter.Eq(m => m.ProdutId, produсtId),
+            Builders<Message>.Filter.Eq(m => m.ProdutId, productId),
             Builders<Message>.Filter.Eq(m => m.MessageId, messageId)
         );
 

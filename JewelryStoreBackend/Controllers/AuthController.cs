@@ -29,9 +29,25 @@ public class AuthController(AuthService authService): ControllerBase
     public async Task<IActionResult> RegistrationUser(RegistrationUser registrationUser)
     {
         string? userIpAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        if (userIpAddress == null)
+        {
+            var error = new BaseResponse
+            {
+                Message = "Невозможно определить ip адрес",
+                Success = false,
+                StatusCode = 400,
+                Error = "Bad Request"
+            };
+            return StatusCode(error.StatusCode, error);
+        }
         
         var response = await authService.RegisterUserAsync(registrationUser, userIpAddress);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
 
     /// <summary>
@@ -53,7 +69,11 @@ public class AuthController(AuthService authService): ControllerBase
     public async Task<IActionResult> Authorization(AuthUser authUser)
     {
         var response = await authService.AuthorizeUserAsync(authUser);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -76,6 +96,10 @@ public class AuthController(AuthService authService): ControllerBase
         var dataToken = JwtController.GetJwtTokenData(token);
         
         var response = await authService.RefreshAccessTokenAsync(dataToken);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
 }

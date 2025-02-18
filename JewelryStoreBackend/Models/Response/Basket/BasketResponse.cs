@@ -17,10 +17,10 @@ public class BasketResponse
     /// <summary>
     /// Стоимость заказа в корзине
     /// </summary>
-    public Price TotalPrice { get; set; }
+    public Price? TotalPrice { get; set; }
     
     /// <summary>
     /// Список товаров в корзине
     /// </summary>
-    public List<Productions> Productions { get; set; }
+    public List<Productions>? Productions { get; set; }
 }

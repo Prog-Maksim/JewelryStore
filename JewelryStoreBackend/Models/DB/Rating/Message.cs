@@ -19,19 +19,19 @@ public class Message
     /// Идентификатор продукта
     /// </summary>
     [BsonElement("produtId")]
-    public string ProdutId { get; set; }
+    public required string ProdutId { get; set; }
 
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>
     [BsonElement("personId")]
-    public string PersonId { get; set; }
+    public required string PersonId { get; set; }
 
     /// <summary>
     /// Идентификатор сообщения
     /// </summary>
     [BsonElement("messageId")]
-    public string MessageId { get; set; }
+    public required string MessageId { get; set; }
     
     /// <summary>
     /// Идентификатор сообщения на который отвечает
@@ -44,7 +44,7 @@ public class Message
     /// Текст комментария
     /// </summary>
     [BsonElement("text")]
-    public string Text { get; set; }
+    public required string Text { get; set; }
     
     /// <summary>
     /// Райтинг комментария

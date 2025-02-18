@@ -40,6 +40,18 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var user = await userRepository.GetUserByIdAsync(dataToken.UserId);
+
+        if (user == null)
+        {
+            var error = new BaseResponse
+            {
+                Message = "Пользователь не найден",
+                Success = false,
+                StatusCode = 404,
+                Error = "Not found"
+            };
+            return StatusCode(error.StatusCode, error);
+        }
         
         return Ok(new PersonInform
         {
@@ -125,7 +137,11 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var response = await authService.AddUserAddress(dataToken.UserId, address);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -150,7 +166,11 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var response = await authService.UpdateUserAddress(dataToken.UserId, addressId, newAddress);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -170,7 +190,11 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var response = await authService.DeleteUserAddress(dataToken.UserId, addressId);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
 
     /// <summary>
@@ -190,7 +214,11 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, phoneNumber);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -210,7 +238,11 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, phoneNumber);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -227,6 +259,10 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     {
         var dataToken = GetUserIdFromToken();
         var response = await authService.DeletePhoneNumberAsync(dataToken.UserId);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
 }

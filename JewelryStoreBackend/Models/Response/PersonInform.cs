@@ -5,12 +5,12 @@ public class PersonInform
     /// <summary>
     /// Имя пользователя
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; set; }
     
     /// <summary>
     /// Фамилия пользователя
     /// </summary>
-    public string Surname { get; set; }
+    public required string Surname { get; set; }
     
     /// <summary>
     /// Отчество пользователя
@@ -20,7 +20,7 @@ public class PersonInform
     /// <summary>
     /// Почта пользователя
     /// </summary>
-    public string Email { get; set; }
+    public required string Email { get; set; }
     
     /// <summary>
     /// Адрес пользователя

@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 namespace JewelryStoreBackend.Models.Response;
 
 /// <summary>
-/// Класс с данными об ошибке
+/// Базовый класс о результате ответа
 /// </summary>
 public class BaseResponse
 {
     /// <summary>
     /// Описание ответа
     /// </summary>
-    public string Message { get; set; }
+    public required string Message { get; set; }
     
     /// <summary>
     /// Статус выполнения
@@ -29,5 +29,5 @@ public class BaseResponse
     /// Название ошибки
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string Error { get; set; }
+    public string? Error { get; set; }
 }

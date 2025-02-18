@@ -12,29 +12,29 @@ public interface IProductRepository
     /// </summary>
     /// <param name="productDb">Данные товара</param>
     /// <returns></returns>
-    Task AddProductAsync(ProductDB productDb);
+    Task AddProductAsync(ProductDb productDb);
     
     /// <summary>
     /// Обновляет продукт
     /// </summary>
-    /// <param name="SKU">Артикул товара</param>
+    /// <param name="sku">Артикул товара</param>
     /// <param name="product">Новые данные товара</param>
     /// <returns></returns>
-    Task UpdateProductAsync(string SKU, ProductDB product);
+    Task UpdateProductAsync(string sku, ProductDb product);
     
     /// <summary>
     /// Извлечение всех товаров
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    Task<List<ProductDB>> GetAllProductsAsync(string languageCode);
+    Task<List<ProductDb>> GetAllProductsAsync(string languageCode);
 
     /// <summary>
     /// Возвращает товары для слайдера
     /// </summary>
     /// <param name="languageCode"></param>
     /// <returns></returns>
-    Task<List<ProductsSlider>> GetProductInSliderAsync(string languageCode);
+    Task<List<ProductsSlider>?> GetProductInSliderAsync(string languageCode);
     
     /// <summary>
     /// Производит поиск товаров
@@ -50,7 +50,7 @@ public interface IProductRepository
     /// <param name="sortField">Поле по которому производится поиск</param>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    Task<List<ProductDB>> GetProductsInSearchAsync(
+    Task<List<ProductDb>> GetProductsInSearchAsync(
         string? search,
         string? productType,
         double? minPrice,
@@ -74,7 +74,7 @@ public interface IProductRepository
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    Task<(ProductDB minProduct, ProductDB maxProduct)> GetMinMaxPricesAsync(string languageCode);
+    Task<(ProductDb minProduct, ProductDb maxProduct)> GetMinMaxPricesAsync(string languageCode);
     
     /// <summary>
     /// Получение всех товаров по категории и языковому коду
@@ -82,14 +82,14 @@ public interface IProductRepository
     /// <param name="category">Категория товара</param>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    Task<List<ProductDB>> GetProductsByCategoryAsync(string category, string languageCode);
-    //
+    Task<List<ProductDb>> GetProductsByCategoryAsync(string category, string languageCode);
+    
     /// <summary>
     /// Получение всех новых товаров, добавленных за последние 2 недели
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    Task<List<ProductDB>> GetNewProductsAsync(string languageCode);
+    Task<List<ProductDb>> GetNewProductsAsync(string languageCode);
     //
     /// <summary>
     /// Возвращает товар по id
@@ -97,7 +97,7 @@ public interface IProductRepository
     /// <param name="languageCode">Языковой код</param>
     /// <param name="sku">Артикул товара</param>
     /// <returns></returns>
-    Task<ProductDB?> GetProductByIdAsync(string languageCode, string sku);
+    Task<ProductDb?> GetProductByIdAsync(string languageCode, string sku);
     
     /// <summary>
     /// Возвращает товар по id
@@ -105,7 +105,7 @@ public interface IProductRepository
     /// <param name="languageCode">Языковой код</param>
     /// <param name="sku">Артикул товара</param>
     /// <returns></returns>
-    Task<ProductDB?> GetProductByIdAllAsync(string languageCode, string sku);
+    Task<ProductDb?> GetProductByIdAllAsync(string languageCode, string sku);
     
     /// <summary>
     /// Возвращает все рекоммендованные товары
@@ -113,14 +113,14 @@ public interface IProductRepository
     /// <param name="languageCode">Языковой код</param>
     /// <param name="sku">Артикул товара</param>
     /// <returns></returns>
-    Task<List<ProductDB>> GetRecommendedProductsAsync(string languageCode, string sku);
+    Task<List<ProductDb>> GetRecommendedProductsAsync(string languageCode, string sku);
     
     /// <summary>
     /// Вовзвращает все популярные товары
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    Task<List<ProductDB>> GetPopularProductsAsync(string languageCode);
+    Task<List<ProductDb>> GetPopularProductsAsync(string languageCode);
 
     /// <summary>
     /// Возвращает лайк пользователя на товар

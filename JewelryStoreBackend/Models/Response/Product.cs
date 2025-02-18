@@ -13,29 +13,28 @@ public class Product
     /// <summary>
     /// Артикул товара
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string SKU { get; set; }
+    public required string Sku { get; set; }
     
     /// <summary>
     /// Цена товара
     /// </summary>
-    public Price Price { get; set; }
+    public Price? Price { get; set; }
     
     /// <summary>
     /// Заголовок товара
     /// </summary>
-    public string Title { get; set; }
+    public required string Title { get; set; }
     
     /// <summary>
     /// Описание товара
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string Description { get; set; }
+    public string? Description { get; set; }
     
     /// <summary>
     /// Идентификатор изображения
     /// </summary>
-    public List<string> ProductImageId { get; set; }
+    public List<string>? ProductImageId { get; set; }
     
     /// <summary>
     /// Статус товара (продается/не продается)

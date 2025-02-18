@@ -10,53 +10,52 @@ public class OrderDetail
     /// <summary>
     /// Идентификатор заказа
     /// </summary>
-    public string orderId { get; set; }
+    public required string OrderId { get; set; }
     
     /// <summary>
     /// Фамилия имя пользователя
     /// </summary>
-    public string name { get; set; }
+    public required string Name { get; set; }
     
     /// <summary>
     /// Поста пользователя
     /// </summary>
-    public string email { get; set; }
+    public required string Email { get; set; }
     
     /// <summary>
     /// Номер телефона пользователя
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? phoneNumber { get; set; }
+    public required string PhoneNumber { get; set; }
     
     /// <summary>
     /// Дата и время создания заказа
     /// </summary>
-    public DateTime createTimestamp { get; set; }
+    public DateTime CreateTimestamp { get; set; }
     
     /// <summary>
     /// Дата и время выполнения заказа
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public DateTime? completedTimestamp { get; set; }
+    public DateTime? CompletedTimestamp { get; set; }
     
     /// <summary>
     /// Статус заказа
     /// </summary>
-    public OrderStatus status { get; set; }
+    public OrderStatus Status { get; set; }
     
     /// <summary>
     /// Стоимость заказа
     /// </summary>
-    public double orderCost { get; set; }
+    public double OrderCost { get; set; }
     
     /// <summary>
     /// Валюта
     /// </summary>
-    public string currency { get; set; }
+    public required string Currency { get; set; }
     
-    public List<OrderDetailProduct> products { get; set; }
-    public OrderDetailPayment payment { get; set; }
-    public OrderDetailShipping shipping { get; set; }
+    public List<OrderDetailProduct>? Products { get; set; }
+    public OrderDetailPayment? Payment { get; set; }
+    public OrderDetailShipping? Shipping { get; set; }
 }
 
 public class OrderDetailProduct
@@ -64,17 +63,17 @@ public class OrderDetailProduct
     /// <summary>
     /// Идентификатор товара
     /// </summary>
-    public string sku { get; set; }
+    public required string Sku { get; set; }
     
     /// <summary>
     /// Стоимость товара
     /// </summary>
-    public double cost { get; set; }
+    public double Cost { get; set; }
     
     /// <summary>
     /// Кол-во товара
     /// </summary>
-    public int quantity { get; set; }
+    public int Quantity { get; set; }
 }
 
 public class OrderDetailPayment
@@ -82,18 +81,18 @@ public class OrderDetailPayment
     /// <summary>
     /// Метод оплаты
     /// </summary>
-    public PaymentType paymentMethod { get; set; }
+    public PaymentType PaymentMethod { get; set; }
     
     /// <summary>
     /// Статус оплаты
     /// </summary>
-    public PaymentStatus paymentStatus { get; set; }
+    public PaymentStatus PaymentStatus { get; set; }
     
     /// <summary>
     /// Дата оплаты заказа
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public DateTime? datePayment { get; set; }
+    public DateTime? DatePayment { get; set; }
 }
 
 public class OrderDetailShipping
@@ -101,12 +100,12 @@ public class OrderDetailShipping
     /// <summary>
     /// Адрес пользователя
     /// </summary>
-    public string TargetAddress { get; set; }
+    public required string TargetAddress { get; set; }
     
     /// <summary>
     /// Адрес склада
     /// </summary>
-    public string WarehouseAddress { get; set; }
+    public required string WarehouseAddress { get; set; }
     
     /// <summary>
     /// Тип доставки

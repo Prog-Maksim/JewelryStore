@@ -8,22 +8,22 @@ public class AddProduct
     /// <summary>
     /// Языковой код
     /// </summary>
-    public string Language {get; set;}
+    public required string Language {get; set;}
     
     /// <summary>
     /// Название товара
     /// </summary>
-    public string Title { get; set; }
+    public required string Title { get; set; }
     
     /// <summary>
     /// Категория товара
     /// </summary>
-    public string Categories { get; set; }
+    public required string Categories { get; set; }
     
     /// <summary>
     /// Тип продукта
     /// </summary>
-    public string ProductType { get; set; }
+    public required string ProductType { get; set; }
     
     /// <summary>
     /// Под тип продукта
@@ -33,12 +33,12 @@ public class AddProduct
     /// <summary>
     /// Описание товара
     /// </summary>
-    public string Description { get; set; }
+    public required string Description { get; set; }
     
     /// <summary>
     /// Цена товара
     /// </summary>
-    public PriceCost Price { get; set; }
+    public required PriceCost Price { get; set; }
     
     /// <summary>
     /// Список идентификаторов фотографий
@@ -48,7 +48,7 @@ public class AddProduct
     /// <summary>
     /// Дополнительная информация о товаре
     /// </summary>
-    public Dictionary<string, string> BaseAdditionalInformation { get; set; }
+    public required Dictionary<string, string> BaseAdditionalInformation { get; set; }
 
     /// <summary>
     /// Спецификация товара
@@ -66,7 +66,7 @@ public class PriceCost
     /// <summary>
     /// Валюта
     /// </summary>
-    public string Currency { get; set; }
+    public required string Currency { get; set; }
 
     /// <summary>
     /// Статус скидки
@@ -89,10 +89,10 @@ public class SpecificationsCost
     /// <summary>
     /// Название спецификации
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; set; }
     
     /// <summary>
     /// Значение спецификации
     /// </summary>
-    public string Item { get; set; }
+    public required string Item { get; set; }
 }

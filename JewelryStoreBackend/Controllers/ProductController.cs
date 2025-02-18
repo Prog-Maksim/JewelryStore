@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using JewelryStoreBackend.Enums;
+using JewelryStoreBackend.Models.Other;
 using JewelryStoreBackend.Models.Response;
-using JewelryStoreBackend.Repository;
 using JewelryStoreBackend.Repository.Interfaces;
 using JewelryStoreBackend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -20,8 +20,8 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товары не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товары не найдены</response>
     [AllowAnonymous]
     [HttpGet("get-slider-info")]
     [ProducesResponseType(typeof(List<Product>), StatusCodes.Status200OK)]
@@ -82,8 +82,8 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товары не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товары не найдены</response>
     [AllowAnonymous]
     [HttpGet("get-new-product")]
     [ProducesResponseType(typeof(List<Product>), StatusCodes.Status200OK)]
@@ -103,19 +103,19 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// Выдает полную информацию о товаре
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
-    /// <param name="SKU">id товара со спецификацией</param>
+    /// <param name="sku">id товара со спецификацией</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товар не найден</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товар не найден</response>
     [AllowAnonymous]
     [HttpGet("get-detail-product")]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDetailProduct(
         [Required][FromQuery] string languageCode,
-        [Required][FromQuery] string SKU
+        [Required][FromQuery] string sku
     )
     {
-        var product = await productRepository.GetProductByIdAllAsync(languageCode, SKU);
+        var product = await productRepository.GetProductByIdAllAsync(languageCode, sku);
 
         if (product == null)
         {
@@ -136,19 +136,19 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// <summary>
     /// Выдает рекомендованные товары к товару
     /// </summary>
-    /// <param name="targetSKU">id товара со спецификацией</param>
+    /// <param name="targetSku">Id товара со спецификацией</param>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товары не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товары не найдены</response>
     [AllowAnonymous]
     [HttpGet("recommend-products")]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetRecommendProducts(
-        [Required][FromQuery] string targetSKU, 
+        [Required][FromQuery] string targetSku, 
         [Required][FromQuery] string languageCode)
     {
-        var products = await productRepository.GetRecommendedProductsAsync(languageCode, targetSKU);
+        var products = await productRepository.GetRecommendedProductsAsync(languageCode, targetSku);
         
         if (products.Count == 0)
         {
@@ -171,8 +171,8 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товары не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товары не найдены</response>
     [AllowAnonymous]
     [HttpGet("popular-products")]
     [ProducesResponseType(typeof(List<Product>), StatusCodes.Status200OK)]
@@ -192,8 +192,8 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товары не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товары не найдены</response>
     [AllowAnonymous]
     [HttpGet("products")]
     [ProducesResponseType(typeof(List<Product>), StatusCodes.Status200OK)]
@@ -215,8 +215,8 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// <param name="languageCode">Языковой код</param>
     /// <param name="category">Категория товара</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товары не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товары не найдены</response>
     [AllowAnonymous]
     [HttpGet("products-category")]
     [ProducesResponseType(typeof(List<Product>), StatusCodes.Status200OK)]
@@ -238,11 +238,11 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// Возвращает минимальную и максимальную цену товара 
     /// </summary>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Цены не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Цены не найдены</response>
     [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProductRepository.MinMaxPrice), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MinMaxPrice), StatusCodes.Status200OK)]
     [HttpGet("get-min-max-price")]
     public async Task<IActionResult> GetMinMaxPriceAsync(string languageCode)
     {
@@ -259,19 +259,19 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// Возвращает товар по ID
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
-    /// <param name="SKU">id товара со спецификацией</param>
+    /// <param name="sku">Id товара со спецификацией</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Товар не найден</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Товар не найден</response>
     [AllowAnonymous]
-    [HttpGet("get-product-inform-in-id")]
+    [HttpGet("get-product-inform-id")]
     [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProductInIdAsync(
         [Required][FromQuery] string languageCode,
-        [Required][FromQuery] string SKU)
+        [Required][FromQuery] string sku)
     {
-        var (response, products) = await productService.GetProductByIdAsync(languageCode, SKU);
+        var (response, products) = await productService.GetProductByIdAsync(languageCode, sku);
         
         if (!response.Success)
             return StatusCode(response.StatusCode, response);
@@ -284,8 +284,8 @@ public class ProductController(IProductRepository productRepository, ProductServ
     /// </summary>
     /// <param name="languageCode">Языковой код</param>
     /// <returns></returns>
-    ///  <response code="200">Успешное выполнение запроса</response>
-    ///  <response code="404">Категории не найдены</response>
+    /// <response code="200">Успешное выполнение запроса</response>
+    /// <response code="404">Категории не найдены</response>
     [AllowAnonymous]
     [HttpGet("get-all-category")]
     [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]

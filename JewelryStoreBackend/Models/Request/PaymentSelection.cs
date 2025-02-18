@@ -36,15 +36,15 @@ public class Card
     /// <summary>
     /// Номер карты
     /// </summary>
-    public string cardNumber { get; set; }
+    public required string CardNumber { get; set; }
     
     /// <summary>
     /// Срок годности
     /// </summary>
-    public string dateExpiration { get; set; }
+    public required string DateExpiration { get; set; }
     
     /// <summary>
     /// 3 значный код
     /// </summary>
-    public string cvv { get; set; }
+    public required string Cvv { get; set; }
 }

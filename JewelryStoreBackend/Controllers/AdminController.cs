@@ -156,34 +156,17 @@ public class AdminController(ApplicationContext context, ProductRepository repos
     {
         Price price = new Price
         {
-            cost = addProduct.Price.Cost,
-            currency = addProduct.Price.Currency,
-            discount = addProduct.Price.Discount,
-            percent = addProduct.Price.Percent,
-            costDiscount = addProduct.Price.CostDiscount,
+            Cost = addProduct.Price.Cost,
+            Currency = addProduct.Price.Currency,
+            Discount = addProduct.Price.Discount,
+            Percent = addProduct.Price.Percent,
+            CostDiscount = addProduct.Price.CostDiscount,
         };
         
         Random rnd = new Random();
         List<Specifications> specs = new ();
         
         string productId = rnd.Next(111111111, 999999999).ToString();
-        
-        ProductDB productDb = new ProductDB
-        {
-            productId = productId,
-            language = addProduct.Language,
-            title = addProduct.Title,
-            onSale = true,
-            categories = addProduct.Categories,
-            productType = addProduct.ProductType,
-            productSubType = addProduct.ProductSubType,
-            description = addProduct.Description,
-            likes = 0,
-            price = price,
-            images = addProduct.Images,
-            baseAdditionalInformation = addProduct.BaseAdditionalInformation,
-            createTimeStamp = DateTime.Now
-        };
 
         if (addProduct.Specifications != null)
         {
@@ -194,20 +177,45 @@ public class AdminController(ApplicationContext context, ProductRepository repos
                 Specifications specifications = new Specifications
                 {
                     Name = item.Name,
-                    specificationId = specificationId,
-                    sku = productId + "-" + specificationId,
-                    item = item.Item,
-                    inStock = true,
-                    stockCount = 100
+                    SpecificationId = specificationId,
+                    Sku = productId + "-" + specificationId,
+                    Item = item.Item,
+                    InStock = true,
+                    StockCount = 100
                 };
 
                 specs.Add(specifications);
             }
-            
-            productDb.specifications = specs;
         }
         else
-            productDb.specifications = null;
+        {
+            return StatusCode(400, new BaseResponse
+            {
+                Message = "Требуется указание specifications",
+                StatusCode = 400,
+                Success = false,
+                Error = "Bad Request"
+            });
+        }
+        
+        ProductDb productDb = new ProductDb
+        {
+            ProductId = productId,
+            Language = addProduct.Language,
+            Title = addProduct.Title,
+            OnSale = true,
+            Categories = addProduct.Categories,
+            ProductType = addProduct.ProductType,
+            ProductSubType = addProduct.ProductSubType,
+            Description = addProduct.Description,
+            Likes = 0,
+            Price = price,
+            Images = addProduct.Images,
+            BaseAdditionalInformation = addProduct.BaseAdditionalInformation,
+            CreateTimeStamp = DateTime.Now,
+            Specifications = specs
+        };
+
         
         await repository.AddProductAsync(productDb);
         

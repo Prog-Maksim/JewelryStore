@@ -1,4 +1,5 @@
-﻿using JewelryStoreBackend.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using JewelryStoreBackend.Enums;
 using JewelryStoreBackend.Models.Request;
 
 namespace JewelryStoreBackend.Models.DB.Order;
@@ -10,7 +11,8 @@ public class OrderPayments
     /// <summary>
     /// Идентификатор заказа
     /// </summary>
-    public string OrderId { get; set; }
+    [MaxLength(11)]
+    public required string OrderId { get; set; }
     
     /// <summary>
     /// Метод оплаты

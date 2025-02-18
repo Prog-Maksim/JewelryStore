@@ -1,6 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace JewelryStoreBackend.Models.DB.Product;
 
@@ -13,7 +12,8 @@ public class Warehouse
     /// <summary>
     /// Идентификатор товара
     /// </summary>
-    public string SKU { get; set; }
+    [BsonElement("SKU")]
+    public required string Sku { get; set; }
     
     /// <summary>
     /// Идентификатор склада

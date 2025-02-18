@@ -7,7 +7,7 @@ public class PreviewOrder
     /// <summary>
     /// Идентификатор заказа
     /// </summary>
-    public string OrderId { get; set; }
+    public required string OrderId { get; set; }
     
     /// <summary>
     /// Дата оформления заказа
@@ -27,5 +27,5 @@ public class PreviewOrder
     /// <summary>
     /// Валюта
     /// </summary>
-    public string Currency { get; set; }
+    public required string Currency { get; set; }
 }
