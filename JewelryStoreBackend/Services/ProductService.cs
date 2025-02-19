@@ -5,7 +5,6 @@ using JewelryStoreBackend.Models.Other;
 using JewelryStoreBackend.Models.Request.Rating;
 using JewelryStoreBackend.Models.Response;
 using JewelryStoreBackend.Models.Response.Rating;
-using JewelryStoreBackend.Repository;
 using JewelryStoreBackend.Repository.Interfaces;
 using JewelryStoreBackend.Security;
 using StackExchange.Redis;
@@ -31,6 +30,9 @@ public class ProductService
     {
         var sliderItem = await _productRepository.GetProductInSliderAsync(languageCode);
         
+        if (sliderItem == null)
+            return (new BaseResponse { Message = "Товары для слайдера не найдены", StatusCode = 404, Error = "Not Found" }, null);
+        
         List<Product> products = new ();
         
         foreach (var item in sliderItem)
@@ -52,7 +54,7 @@ public class ProductService
         return (new BaseResponse { Success = true, Message = "Успешно", StatusCode = 200 }, products);
     }
 
-    public async Task<(BaseResponse Response, List<ProductDB>? products)> GetProductsInSearchAsync(
+    public async Task<(BaseResponse Response, List<ProductDb>? products)> GetProductsInSearchAsync(
         string? search,
         string? productType,
         double? minPrice,
@@ -74,7 +76,7 @@ public class ProductService
         return (new BaseResponse { Success = true, Message = "Успешно", StatusCode = 200 }, result);
     }
 
-    public async Task<(BaseResponse Response, List<ProductDB>?)> GetNewProductsAsync(string languageCode)
+    public async Task<(BaseResponse Response, List<ProductDb>?)> GetNewProductsAsync(string languageCode)
     {
         var products = await _productRepository.GetNewProductsAsync(languageCode);
         
@@ -85,7 +87,7 @@ public class ProductService
         return (new BaseResponse { Success = true, Message = "Успешно", StatusCode = 200 }, result);
     }
     
-    public async Task<(BaseResponse Response, List<ProductDB>? products)> GetPopularProductsAsync(string languageCode)
+    public async Task<(BaseResponse Response, List<ProductDb>? products)> GetPopularProductsAsync(string languageCode)
     {
         var products = await _productRepository.GetPopularProductsAsync(languageCode);
         
@@ -96,7 +98,7 @@ public class ProductService
         return (new BaseResponse { Success = true, Message = "Успешно", StatusCode = 200 }, result);
     }
 
-    public async Task<(BaseResponse Response, List<ProductDB>? products)> GetAllProductsSingleSpecificationsAsync(string languageCode)
+    public async Task<(BaseResponse Response, List<ProductDb>? products)> GetAllProductsSingleSpecificationsAsync(string languageCode)
     {
         var products = await _productRepository.GetAllProductsAsync(languageCode);
         
@@ -107,7 +109,7 @@ public class ProductService
         return (new BaseResponse { Success = true, Message = "Успешно", StatusCode = 200 }, result);
     }
 
-    public async Task<(BaseResponse Response, List<ProductDB>? products)> GetProductsByCategorySingleSpecificationsAsync(
+    public async Task<(BaseResponse Response, List<ProductDb>? products)> GetProductsByCategorySingleSpecificationsAsync(
         string category, string languageCode)
     {
         var products = await _productRepository.GetProductsByCategoryAsync(category, languageCode);
@@ -119,22 +121,22 @@ public class ProductService
         return (new BaseResponse { Success = true, Message = "Успешно", StatusCode = 200 }, result);
     }
 
-    public async Task<(BaseResponse Response, ProductRepository.MinMaxPrice? price)> GetMinMaxPricesAsync(
+    public async Task<(BaseResponse Response, MinMaxPrice? price)> GetMinMaxPricesAsync(
         string languageCode)
     {
         var (minProduct, maxProduct) = await _productRepository.GetMinMaxPricesAsync(languageCode);
         
-        double minPrice = minProduct?.price?.cost ?? -1;
-        double maxPrice = maxProduct?.price?.cost ?? -1;
+        double minPrice = minProduct?.Price.Cost ?? -1;
+        double maxPrice = maxProduct?.Price.Cost ?? -1;
         
         if (maxPrice == -1 || minPrice == -1)
             return (new BaseResponse { Success = false, Message = "Товары не найдены", StatusCode = 404, Error = "NotFound" }, null);
         
-        return (new BaseResponse { Success = false, Message = "Товары не найдены", StatusCode = 404, Error = "NotFound" }, new ProductRepository.MinMaxPrice
+        return (new BaseResponse { Success = true, Message = "Успешно"}, new MinMaxPrice
         {
-            minPrice = minPrice,
-            maxPrice = maxPrice,
-            currency = maxProduct.price.currency
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            Currency = maxProduct.Price.Currency
         });
     }
 
@@ -150,7 +152,7 @@ public class ProductService
 
     public async Task<BaseResponse> AddNewCommentAsync(string userId, string languageCode, NewMessage message)
     {
-        var product = await _productRepository.GetProductByIdAsync(languageCode, message.SKU);
+        var product = await _productRepository.GetProductByIdAsync(languageCode, message.Sku);
 
         if (product == null)
             return new BaseResponse { Success = false, Message = "Товар не найден", StatusCode = 404, Error = "NotFound" };
@@ -159,33 +161,33 @@ public class ProductService
         {
             MessageId = Guid.NewGuid().ToString(),
             PersonId = userId,
-            ProdutId = message.SKU,
-            ReplyMessageId = message.replyMessageId,
+            ProdutId = message.Sku,
+            ReplyMessageId = message.ReplyMessageId,
 
-            Text = message.text,
-            Rating = message.rating,
+            Text = message.Text,
+            Rating = message.Rating,
             Timestamp = DateTime.Now,
             Status = MessageStatus.Sent
         };
         
         string messageId = await _messageRepository.AddMessageAsync(newMessage);
         
-        return new SuccessfulCreatemessage { Success = true, Message = "Комментарий успешно добавлен", CommentId = messageId };
+        return new SuccessfulCreateMessage { Success = true, Message = "Комментарий успешно добавлен", CommentId = messageId };
     }
 
     public async Task<BaseResponse> UpdateCommentAsync(JwtTokenData dataToken, UpdateMessage message)
     {
-        var result = await _messageRepository.GetMessageByIdAsync(message.SKU, message.messageId);
+        var result = await _messageRepository.GetMessageByIdAsync(message.Sku, message.MessageId);
         
         if (result == null)
             return new BaseResponse { Success = false, Message = "Комментарий не найден",StatusCode = 404,Error = "NotFound" };
         
         if (result.PersonId == dataToken.UserId || dataToken.Role == Roles.editor || dataToken.Role == Roles.admin)
-            await _messageRepository.UpdateMessageAsync(message.SKU, message.messageId, message.newText, message.newRating);
+            await _messageRepository.UpdateMessageAsync(message.Sku, message.MessageId, message.NewText, message.NewRating);
         else
             return new BaseResponse { Success = false, Message = "отказано в доступе", StatusCode = 403, Error = "Forbidden" };
         
-        return new SuccessfulCreatemessage { Success = true,Message = "Комментарий успешно обновлен", CommentId = message.messageId };
+        return new SuccessfulCreateMessage { Success = true,Message = "Комментарий успешно обновлен", CommentId = message.MessageId };
     }
 
     public async Task<BaseResponse> DeleteCommentAsync(JwtTokenData dataToken, string sku, string messageId)
@@ -200,7 +202,7 @@ public class ProductService
         else
             return new BaseResponse { Success = false, Message = "отказано в доступе", StatusCode = 403, Error = "Forbidden" };
         
-        return new SuccessfulCreatemessage { Success = true, Message = "Комментарий успешно удален", CommentId = messageId };
+        return new SuccessfulCreateMessage { Success = true, Message = "Комментарий успешно удален", CommentId = messageId };
     }
     
     public async Task<(BaseResponse Response, IEnumerable<Message>? Messages)> GetAllMesageAuthorizeAsync(JwtTokenData dataToken, string sku)
@@ -209,6 +211,17 @@ public class ProductService
             return (new BaseResponse { Success = false, Message = "отказано в доступе", StatusCode = 403, Error = "Forbidden" }, null);
         
         var comments = (await _messageRepository.GetMessagesByProductIdAsync(sku)).ToList();
+        
+        if (comments.Count == 0)
+        {
+            return (new BaseResponse
+            {
+                Message = "Комментарии не найдены",
+                Success = false,
+                StatusCode = 404,
+                Error = "Not found"
+            }, null);
+        }
 
         foreach (var comment in comments)
         {
@@ -243,7 +256,7 @@ public class ProductService
 
         if (result == null)
         {
-            product.likes += 1;
+            product.Likes += 1;
 
             UsersLike like = new UsersLike
             {
@@ -259,7 +272,7 @@ public class ProductService
             return new StateLike { Success = true, Message = "Лайк успешно добавлен", IsLiked = true };
         }
         
-        product.likes -= 1;
+        product.Likes -= 1;
         await _productRepository.UpdateProductAsync(sku, product);
         
         _productRepository.RemoveLikeAsync(result);

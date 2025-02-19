@@ -13,7 +13,7 @@ namespace JewelryStoreBackend.Services;
 
 public class OrderService
 {
-    private readonly int TimeExpiredMinute = 30;
+    private readonly int _timeExpiredMinute = 30;
     
     private readonly IOrderRepository _orderRepository;
     private readonly IBasketRepository _basketRepository;
@@ -43,15 +43,15 @@ public class OrderService
         return (new BaseResponse { Success = false, Message = message, StatusCode = statusCode, Error = error }, null);
     }
     
-    public async Task<(bool Success, BaseResponse Response, OrderData? Order)> InitiateOrderAsync(string userId, string languageCode)
+    public async Task<(BaseResponse Response, OrderData? Order)> InitiateOrderAsync(string userId, string languageCode)
     {
         var basketItems = await _basketRepository.GetUserBasketAsync(userId);
         
         if (!basketItems.Any())
-            return (false, new BaseResponse { Success = false, Message = "Товары не найдены в корзине", StatusCode = 404 }, null);
+            return (new BaseResponse { Success = false, Message = "Товары не найдены в корзине", StatusCode = 404 }, null);
 
         if (await _orderRepository.IsOrderInProgressAsync(userId))
-            return (false, new BaseResponse { Success = false, Message = "Заказ уже оформляется", StatusCode = 400 }, null);
+            return (new BaseResponse { Success = false, Message = "Заказ уже оформляется", StatusCode = 400 }, null);
 
         var products = new List<ProductOrderData>();
         string currency = "";
@@ -59,18 +59,22 @@ public class OrderService
         foreach (var item in basketItems)
         {
             var product = await _productRepository.GetProductByIdAsync(languageCode, item.ProductId);
-            if (product.specifications.First().inStock || product.onSale)
+            
+            if (product == null)
+                return (new BaseResponse { Success = false, Message = "Товар не найден", StatusCode = 404, Error = "NotFound" }, null);
+            
+            if (product.Specifications.First().InStock || product.OnSale)
             {
-                currency = product.price.currency;
+                currency = product.Price.Currency;
                 products.Add(new ProductOrderData
                 {
-                    SKU = product.specifications.First().sku,
-                    Title = product.title,
-                    Price = item.Count * product.price.cost,
-                    PriceDiscount = item.Count * product.price.costDiscount,
+                    Sku = product.Specifications.First().Sku,
+                    Title = product.Title,
+                    Price = item.Count * product.Price.Cost,
+                    PriceDiscount = item.Count * product.Price.CostDiscount,
                     Quantity = item.Count,
-                    ProductImage = product.images.First(),
-                    ProductType = product.productType
+                    ProductImage = product.Images.First(),
+                    ProductType = product.ProductType
                 });
             }
         }
@@ -79,11 +83,17 @@ public class OrderService
         var totalDiscountPrice = products.Sum(p => p.PriceDiscount);
         
         var user = await _userRepository.GetUserByIdAsync(userId);
+        
+        if (user == null)
+            return (new BaseResponse { Success = false, Message = "Пользователь не найден!", StatusCode = 404, Error = "NotFound" }, null);
+        
+        if (user.PhoneNumber == null)
+            return (new BaseResponse { Success = false, Message = "Требуется номер телефона!", StatusCode = 400, Error = "Bad Request" }, null);
 
         var orderData = new OrderData
         {
-            languageCode = languageCode,
-            userData = new UserOrderData
+            LanguageCode = languageCode,
+            UserData = new UserOrderData
             {
                 Name = user.Surname + " " + user.Name,
                 Email = user.Email,
@@ -100,9 +110,9 @@ public class OrderService
             }
         };
         
-        await _orderRepository.StartOrderAsync(userId, orderData, TimeSpan.FromMinutes(TimeExpiredMinute));
+        await _orderRepository.StartOrderAsync(userId, orderData, TimeSpan.FromMinutes(_timeExpiredMinute));
 
-        return (true, new BaseResponse { Success = true, Message = "Заказ успешно создан" }, orderData);
+        return (new BaseResponse { Success = true, Message = "Заказ успешно создан" }, orderData);
     }
     
     public async Task<BaseResponse> CancelOrderAsync(string userId)
@@ -127,7 +137,7 @@ public class OrderService
         if (!await _orderRepository.IsOrderInProgressAsync(userId) || order == null)
             return CreateResponse("Заказ не найден", 404, "Not Found");
         
-        if (order.couponData != null)
+        if (order.CouponData != null)
             return CreateResponse("Купон уже применен!", 400, "Bad Request");
         
         
@@ -137,9 +147,9 @@ public class OrderService
         if (appliedDiscountProducts == 0)
             return CreateResponse("Купон нельзя применить к данным товарам", 403, "Forbidden");
 
-        order.couponData = couponOrderData;
+        order.CouponData = couponOrderData;
         
-        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(TimeExpiredMinute));
+        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(_timeExpiredMinute));
 
         return (new BaseResponse { Success = true, Message = "Купон успешно применен" }, order);
     }
@@ -199,17 +209,17 @@ public class OrderService
         if (!await _orderRepository.IsOrderInProgressAsync(userId) || order == null)
             return CreateResponse("Заказ не найден", 404, "Not Found");
         
-        if (order.couponData == null)
+        if (order.CouponData == null)
             return CreateResponse("Купон не найден!", 404, "Not Found");
         
-        order.couponData = null;
+        order.CouponData = null;
         
         order.PriceDatails.PercentTheCoupon = null;
         order.PriceDatails.TotalDiscountTheCoupon = null;
         
         order.PriceDatails.TotalCost = order.PriceDatails.TotalPriceDiscount + (order.PriceDatails.ShippingCost ?? 0);
         
-        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(TimeExpiredMinute));
+        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(_timeExpiredMinute));
         
         return (new BaseResponse { Success = true, Message = "Купон успешно удален!" }, order);
     }
@@ -221,7 +231,7 @@ public class OrderService
         if (!await _orderRepository.IsOrderInProgressAsync(userId) || order == null)
             return CreateResponse("Заказ не найден", 404, "Not Found");
         
-        if (order.shippingData != null)
+        if (order.ShippingData != null)
             return CreateResponse("Доставка уже применена!", 400, "Bad Request");
 
         Address? address = await _addressRepository.GetAddressByIdAsync(userId, addressId);
@@ -229,13 +239,13 @@ public class OrderService
         if (address == null)
             return CreateResponse("Данный адрес не найден", 404, "Not Found");
         
-        string lonStart = address.lon;
-        string latStart = address.lat;
+        string lonStart = address.Lon;
+        string latStart = address.Lat;
         
         var warehouseAddress = await _addressRepository.GetWarehouseByIdAsync("");
         
         var coordinate =
-            await GeolocationService.GetGeolocateDistanceAsync(lonStart, latStart, warehouseAddress.lon, warehouseAddress.lat);
+            await GeolocationService.GetGeolocateDistanceAsync(lonStart, latStart, warehouseAddress.Lon, warehouseAddress.Lat);
         
         if (coordinate == null)
             return CreateResponse("Не удалось рассчитать стоимость, попробуйте позже", 408, "Request Timeout");
@@ -261,9 +271,9 @@ public class OrderService
             Details = result
         };
         
-        order.shippingData = shippingOrderData;
+        order.ShippingData = shippingOrderData;
         
-        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(TimeExpiredMinute));
+        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(_timeExpiredMinute));
         return (new BaseResponse { Success = true, Message = "Доставка успешно применена!" }, order);
     }
 
@@ -274,15 +284,15 @@ public class OrderService
         if (!await _orderRepository.IsOrderInProgressAsync(userId) || order == null)
             return CreateResponse("Заказ не найден", 404, "Not Found");
         
-        if (order.shippingData == null)
+        if (order.ShippingData == null)
             return CreateResponse("Доставка не найдена!", 404, "Not Found");
         
-        order.shippingData = null;
+        order.ShippingData = null;
         order.PriceDatails.TotalCost -= order.PriceDatails.ShippingCost ?? 0;
         order.PriceDatails.TotalCost = Math.Round(order.PriceDatails.TotalCost, 2);
         order.PriceDatails.ShippingCost = null;
         
-        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(TimeExpiredMinute));
+        await _orderRepository.StartOrderAsync(userId, order, TimeSpan.FromMinutes(_timeExpiredMinute));
         return (new BaseResponse { Success = true, Message = "Доставка успешно удалена!" }, order);
     }
 
@@ -312,7 +322,7 @@ public class OrderService
             OrderProducts product = new OrderProducts
             {
                 OrderId = orderId,
-                SKU = item.SKU,
+                Sku = item.Sku,
                 Cost = item.PriceDiscount,
                 Quantity = item.Quantity
             };
@@ -327,14 +337,17 @@ public class OrderService
             DatePayment = payment.PaymentType == PaymentType.Card ? DateTime.Now : null
         };
         await _orderRepository.AddOrderPaymentsAsync(payments);
+        
+        if (preOrder.ShippingData == null)
+            return CreateResponse("Требуется указания адреса доставки", 400, "Bad Request");
 
         OrderShippings shippings = new OrderShippings
         {
             OrderId = orderId,
-            TargetAddress = preOrder.shippingData.UserAddress,
-            WarehouseAddress = preOrder.shippingData.WarehouseAddress,
-            DeliveryType = preOrder.shippingData.ShippingMethod,
-            DateShipping = preOrder.shippingData.EstimatedDeliveryTime
+            TargetAddress = preOrder.ShippingData.UserAddress,
+            WarehouseAddress = preOrder.ShippingData.WarehouseAddress,
+            DeliveryType = preOrder.ShippingData.ShippingMethod,
+            DateShipping = preOrder.ShippingData.EstimatedDeliveryTime
         };
         await _orderRepository.AddOrderShippingsAsync(shippings);
         await _orderRepository.SaveChangesAsync();
@@ -393,12 +406,12 @@ public class OrderService
         return (new BaseResponse { Message = "Список заказов", StatusCode = 200 }, preOrders);
     }
 
-    public async Task<(BaseResponse Response, OrderDetail order)> GetDetailOrderAsync(string userId, string orderId)
+    public async Task<(BaseResponse Response, OrderDetail? order)> GetDetailOrderAsync(string userId, string orderId)
     {
         Orders? order = await _orderRepository.GetDetailOrderByIdAsync(userId, orderId);
         
         if (order == null)
-            CreateResponse("Заказ не найден", 404, "Not Found");
+            return (new BaseResponse { Message = "Данный заказ не найден", StatusCode = 200 }, null);
         
         OrderDetailShipping shipping = new OrderDetailShipping
         {
@@ -410,9 +423,9 @@ public class OrderService
 
         OrderDetailPayment payment = new OrderDetailPayment
         {
-            paymentMethod = order.Payment.PaymentMethod,
-            paymentStatus = order.Payment.PaymentStatus,
-            datePayment = order.Payment.DatePayment
+            PaymentMethod = order.Payment.PaymentMethod,
+            PaymentStatus = order.Payment.PaymentStatus,
+            DatePayment = order.Payment.DatePayment
         };
         
         List<OrderDetailProduct> products = new List<OrderDetailProduct>();
@@ -421,27 +434,27 @@ public class OrderService
         {
             OrderDetailProduct product = new OrderDetailProduct
             {
-                sku = item.SKU,
-                cost = item.Cost,
-                quantity = item.Quantity
+                Sku = item.Sku,
+                Cost = item.Cost,
+                Quantity = item.Quantity
             };
             products.Add(product);
         }
 
         OrderDetail orderDetail = new OrderDetail
         {
-            orderId = order.OrderId,
-            name = order.Users.Surname + " " + order.Users.Name,
-            email = order.Users.Email,
-            phoneNumber = order.Users.PhoneNumber,
-            createTimestamp = order.CreateTimestamp,
-            completedTimestamp = order.CompletedTimestamp,
-            status = order.Status,
-            orderCost = order.OrderCost,
-            currency = order.Currency,
-            products = products,
-            shipping = shipping,
-            payment = payment,
+            OrderId = order.OrderId,
+            Name = order.Users.Surname + " " + order.Users.Name,
+            Email = order.Users.Email,
+            PhoneNumber = order.Users.PhoneNumber ?? String.Empty,
+            CreateTimestamp = order.CreateTimestamp,
+            CompletedTimestamp = order.CompletedTimestamp,
+            Status = order.Status,
+            OrderCost = order.OrderCost,
+            Currency = order.Currency,
+            Products = products,
+            Shipping = shipping,
+            Payment = payment,
         };
         
         return (new BaseResponse{ Message = "Успешно", StatusCode = 200 }, orderDetail);
