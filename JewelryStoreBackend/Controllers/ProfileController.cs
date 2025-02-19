@@ -200,7 +200,7 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     /// <summary>
     /// Добавляет номер телефона
     /// </summary>
-    /// <param name="phoneNumber">Номер телефона</param>
+    /// <param name="data">Номер телефона</param>
     /// <returns></returns>
     /// <response code="200">Успешно</response>
     /// <response code="403">Не удалось добавить номер телефона</response>
@@ -210,10 +210,10 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> AddPhoneNumber([Required][FromBody] string phoneNumber)
+    public async Task<IActionResult> AddPhoneNumber([Required][FromBody] AddPhoneNumberRequest data)
     {
         var dataToken = GetUserIdFromToken();
-        var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, phoneNumber);
+        var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, data.PhoneNumber);
         
         if (!response.Success)
             return StatusCode(response.StatusCode, response);
@@ -224,7 +224,7 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     /// <summary>
     /// Обновляет номер телефона
     /// </summary>
-    /// <param name="phoneNumber">Номер телефона</param>
+    /// <param name="data">Номер телефона</param>
     /// <returns></returns>
     /// <response code="200">Успешно</response>
     /// <response code="403">Не удалось обновить номер телефона</response>
@@ -234,10 +234,10 @@ public class ProfileController(AuthService authService, IUserRepository userRepo
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdatePhoneNumber([Required][FromBody] string phoneNumber)
+    public async Task<IActionResult> UpdatePhoneNumber([Required][FromBody] AddPhoneNumberRequest data)
     {
         var dataToken = GetUserIdFromToken();
-        var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, phoneNumber);
+        var response = await authService.UpdatePhoneNumberAsync(dataToken.UserId, data.PhoneNumber);
         
         if (!response.Success)
             return StatusCode(response.StatusCode, response);
