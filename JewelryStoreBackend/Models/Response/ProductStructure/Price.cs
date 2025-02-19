@@ -10,7 +10,7 @@ public class Price
     /// <summary>
     /// Символ валюты 
     /// </summary>
-    public string Currency  { get; set; }
+    public string? Currency  { get; set; }
     
     /// <summary>
     /// Есть ли скидка на товар

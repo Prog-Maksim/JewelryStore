@@ -1,11 +1,11 @@
-﻿using JewelryStoreBackend.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using JewelryStoreBackend.Enums;
 using JewelryStoreBackend.Models.DB.Order;
 using JewelryStoreBackend.Models.DB.Rating;
-using JewelryStoreBackend.Security;
 
 namespace JewelryStoreBackend.Models.DB.User;
 
-public class Person
+public class Users
 {
     /// <summary>
     /// Идентификатор пользователя
@@ -15,36 +15,43 @@ public class Person
     /// <summary>
     /// Внешний идентификатор пользователя
     /// </summary>
-    public string PersonId { get; set; }
+    [MaxLength(100)]
+    public required string PersonId { get; set; }
     
     /// <summary>
     /// Имя
     /// </summary>
-    public string Name { get; set; }
+    [MaxLength(50)]
+    public required string Name { get; set; }
     
     /// <summary>
     /// Фамилия
     /// </summary>
-    public string Surname { get; set; }
+    [MaxLength(50)]
+    public required string Surname { get; set; }
     
     /// <summary>
     /// Отчество, если есть
     /// </summary>
+    [MaxLength(50)]
     public string? Patronymic { get; set; }
     
     /// <summary>
     /// Почта
     /// </summary>
-    public string Email { get; set; }
+    [MaxLength(100)]
+    public required string Email { get; set; }
     
     /// <summary>
     /// Номер телефона
     /// </summary>
+    [MaxLength(12)]
     public string? PhoneNumber { get; set; }
     
     /// <summary>
     /// Пароль
     /// </summary>
+    [MaxLength(250)]
     public string Password { get; set; }
     
     /// <summary>
@@ -55,6 +62,7 @@ public class Person
     /// <summary>
     /// Адрес
     /// </summary>
+    [MaxLength(200)]
     public string? Adress { get; set; }
     
     /// <summary>
@@ -65,12 +73,14 @@ public class Person
     /// <summary>
     /// Адрес регистрации пользователя
     /// </summary>
-    public string AdressRegistration { get; set; }
+    [MaxLength(100)]
+    public required string AddressRegistration { get; set; }
     
     /// <summary>
     /// Ip адрес регистрации
     /// </summary>
-    public string IpAdressRegistration { get; set; }
+    [MaxLength(50)]
+    public required string IpAdressRegistration { get; set; }
     
     /// <summary>
     /// Состояние пользователя

@@ -14,12 +14,12 @@ public interface IMessageRepository
     /// <summary>
     /// Обнволяет сообщение пользователя
     /// </summary>
-    /// <param name="produсtId">Идентификатор продукта</param>
+    /// <param name="productId">Идентификатор продукта</param>
     /// <param name="messageId">Идентификатор сообщения</param>
     /// <param name="newText">Новый текст комментария</param>
     /// <param name="newRating">Новый рейтинг</param>
     /// <returns></returns>
-    Task UpdateMessageAsync(string produсtId, string messageId, string newText, int newRating);
+    Task UpdateMessageAsync(string productId, string messageId, string newText, int newRating);
     
     /// <summary>
     /// Удаляет сообщение пользователя

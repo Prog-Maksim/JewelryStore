@@ -5,25 +5,25 @@ public class PriceProduction
     /// <summary>
     /// Цена
     /// </summary>
-    public double cost { get; set; }
+    public double Cost { get; set; }
     
     /// <summary>
     /// Валюта
     /// </summary>
-    public string currency { get; set; }
+    public required string Currency { get; set; }
     
     /// <summary>
     /// Есть ли скидка
     /// </summary>
-    public bool discount { get; set; }
+    public bool Discount { get; set; }
     
     /// <summary>
     /// Процент скидки
     /// </summary>
-    public int percent { get; set; }
+    public int Percent { get; set; }
     
     /// <summary>
     /// Цена со скидкой
     /// </summary>
-    public double costDiscount { get; set; }
+    public double CostDiscount { get; set; }
 }

@@ -1,4 +1,6 @@
-﻿namespace JewelryStoreBackend.Models.Request;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace JewelryStoreBackend.Models.Request;
 
 public class PaymentSelection
 {
@@ -36,15 +38,23 @@ public class Card
     /// <summary>
     /// Номер карты
     /// </summary>
-    public string cardNumber { get; set; }
+    [Required(ErrorMessage = "Номер карты обязателен для заполнения.")]
+    [StringLength(16, MinimumLength = 16, ErrorMessage = "Номер карты должен состоять из 16 цифр.")]
+    [RegularExpression(@"^\d{16}$", ErrorMessage = "Номер карты должен содержать только цифры.")]
+    public required string CardNumber { get; set; }
     
     /// <summary>
     /// Срок годности
     /// </summary>
-    public string dateExpiration { get; set; }
+    [Required(ErrorMessage = "Срок годности обязателен для заполнения.")]
+    [RegularExpression(@"^(0[1-9]|1[0-2])/\d{2}$", ErrorMessage = "Неверный формат срока годности. Формат должен быть MM/YY.")]
+    public required string DateExpiration { get; set; }
     
     /// <summary>
-    /// 3 значный код
+    /// 3-значный код (CVV)
     /// </summary>
-    public string cvv { get; set; }
+    [Required(ErrorMessage = "CVV код обязателен для заполнения.")]
+    [StringLength(3, MinimumLength = 3, ErrorMessage = "CVV код должен состоять из 3 цифр.")]
+    [RegularExpression(@"^\d{3}$", ErrorMessage = "CVV код должен содержать только цифры.")]
+    public required string Cvv { get; set; }
 }

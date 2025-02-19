@@ -47,9 +47,9 @@ public class OrdersController(
     public async Task<IActionResult> InitializeOrder([Required][FromQuery] string languageCode)
     {
         var dataToken = GetUserIdFromToken();
-        var (success, response, order) = await orderService.InitiateOrderAsync(dataToken.UserId, languageCode);
+        var (response, order) = await orderService.InitiateOrderAsync(dataToken.UserId, languageCode);
         
-        if (!success)
+        if (!response.Success)
             return StatusCode(response.StatusCode, response);
         
         return Ok(order);

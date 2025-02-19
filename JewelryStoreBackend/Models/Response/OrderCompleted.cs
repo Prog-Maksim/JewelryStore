@@ -2,5 +2,8 @@
 
 public class OrderCompleted: BaseResponse
 {
-    public string OrderId { get; set; }
+    /// <summary>
+    /// Идентификатор заказа
+    /// </summary>
+    public required string OrderId { get; set; }
 }

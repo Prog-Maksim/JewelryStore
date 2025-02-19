@@ -17,7 +17,7 @@ namespace JewelryStoreBackend.Services;
 public class AuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly PasswordHasher<Person> _passwordHasher = new();
+    private readonly PasswordHasher<Users> _passwordHasher = new();
 
     public AuthService(IUserRepository userRepository)
     {
@@ -31,7 +31,7 @@ public class AuthService
         if (existingUser != null)
             return new BaseResponse { Message = "Пользователь с данным email уже существует", Error = "Forbidden", StatusCode = 403 };
 
-        var user = new Person
+        var user = new Users
         {
             PersonId = Guid.NewGuid().ToString(),
             Name = registrationUser.Name,
@@ -41,6 +41,7 @@ public class AuthService
             PasswordVersion = 1,
             DateRegistration = DateTime.Now,
             IpAdressRegistration = userIpAddress,
+            AddressRegistration = await DeterminingIpAddress.GetPositionUser(userIpAddress),
             Role = Roles.user,
             State = true
         };
@@ -93,7 +94,8 @@ public class AuthService
             var accessToken = JwtController.GenerateJwtAccessToken(dataToken.UserId, user.Role);
             var newRefreshToken = JwtController.GenerateJwtRefreshToken(dataToken.UserId, dataToken.Version, user.Role);
 
-            var tokens = await _userRepository.GetTokenByUserIdAsync(user.PersonId);
+            Tokens? tokens = await _userRepository.GetTokenByUserIdAsync(user.PersonId);
+            
             tokens.AccessToken = accessToken;
             tokens.RefreshToken = newRefreshToken;
 
@@ -115,6 +117,9 @@ public class AuthService
     {
         var user = await _userRepository.GetUserByIdAsync(userId);
         
+        if (user == null)
+            return new BaseResponse { Success = false, Message = "Пользователь не найден!", StatusCode = 404, Error = "NotFound" };
+        
         if (_passwordHasher.VerifyHashedPassword(user, user.Password, updatePassword.OldPassword) !=
             PasswordVerificationResult.Success)
             return new BaseResponse { Success = false, Message = "Пароль не верен!", StatusCode = 423, Error = "Locked" };
@@ -133,7 +138,17 @@ public class AuthService
 
     public async Task<BaseResponse> AddUserAddress(string userId, AddAddress address)
     {
-        List<Root>? results = await GeolocationService.GetGeolocatesAsync($"{address.Country} {address.City} {address.AddressLine1}");
+        List<Root>? results;
+        
+        try
+        {
+            results = await GeolocationService.GetGeolocatesAsync($"{address.Country} {address.City} {address.AddressLine1}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new BaseResponse { Success = false, Message = "Не разрешено использовать прокси", StatusCode = 403, Error = "Forbidden" };
+        }
 
         if (results == null || results.Count == 0)
             return new BaseResponse { Success = false, Message = "Указанный адрес неверен!", StatusCode = 400, Error = "BadRequest" };
@@ -153,8 +168,8 @@ public class AuthService
             AddressLine2 = address.AddressLine2,
             PostalCode = searchAddress.address.postcode,
             CreateAt = DateTime.Now,
-            lon = searchAddress.lon,
-            lat = searchAddress.lat,
+            Lon = searchAddress.lon,
+            Lat = searchAddress.lat,
         };
         await _userRepository.AddAddress(newAddress);
         await _userRepository.SaveChangesAsync();
@@ -169,7 +184,16 @@ public class AuthService
         if (address == null)
             return new BaseResponse { Success = false, Message = "Данный адрес не найден!", StatusCode = 404, Error = "NotFound" };
         
-        List<Root>? results = await GeolocationService.GetGeolocatesAsync($"{updateAddress.Country} {updateAddress.City} {updateAddress.AddressLine1}");
+        List<Root>? results;
+        
+        try
+        {
+            results = await GeolocationService.GetGeolocatesAsync($"{address.Country} {address.City} {address.AddressLine1}");
+        }
+        catch (Exception)
+        {
+            return new BaseResponse { Success = false, Message = "Не разрешено использовать прокси", StatusCode = 407, Error = "Proxy Authentication Required" };
+        }
 
         if (results == null || results.Count == 0)
             return new BaseResponse { Success = false, Message = "Указанный адрес неверен!", StatusCode = 400, Error = "BadRequest" };
@@ -185,8 +209,8 @@ public class AuthService
         address.AddressLine2 = updateAddress.AddressLine2;
         address.PostalCode = searchAddress.address.postcode;
         address.UpdateAt = DateTime.Now;
-        address.lon = searchAddress.lon;
-        address.lat = searchAddress.lat;
+        address.Lon = searchAddress.lon;
+        address.Lat = searchAddress.lat;
         
         await _userRepository.SaveChangesAsync();
         
@@ -200,29 +224,37 @@ public class AuthService
         if (address == null)
             return new BaseResponse { Success = false, Message = "Данный адрес не найден!", StatusCode = 404, Error = "NotFound" };
         
-        _userRepository.DeleteAddresses(address);
+        _userRepository.DeleteAddress(address);
         await _userRepository.SaveChangesAsync();
         
         return new BaseResponse { Message = "Адрес успешно удален", Success = true };
     }
     
-    public async Task<BaseResponse> UpdatePhoneNumberAsync(string personId, string phoneNumber)
+    public async Task<BaseResponse> UpdatePhoneNumberAsync(string userId, string phoneNumber)
     {
         var existingUser = await _userRepository.GetUserByPhoneNumberAsync(phoneNumber);
         if (existingUser != null)
             return new BaseResponse { Success = false, Message = "Невозможно обновить номер телефона", StatusCode = 403, Error = "Forbidden" };
 
-        var person = await _userRepository.GetUserByIdAsync(personId);
-        person.PhoneNumber = phoneNumber;
+        var user = await _userRepository.GetUserByIdAsync(userId);
+        
+        if (user == null)
+            return new BaseResponse { Success = false, Message = "Пользователь не найден!", StatusCode = 404, Error = "NotFound" };
+        
+        user.PhoneNumber = phoneNumber;
         await _userRepository.SaveChangesAsync();
 
         return new BaseResponse { Success = true, Message = "Номер телефона успешно обновлен!" };
     }
     
-    public async Task<BaseResponse> DeletePhoneNumberAsync(string personId)
+    public async Task<BaseResponse> DeletePhoneNumberAsync(string userId)
     {
-        var person = await _userRepository.GetUserByIdAsync(personId);
-        person.PhoneNumber = null;
+        var user = await _userRepository.GetUserByIdAsync(userId);
+        
+        if (user == null)
+            return new BaseResponse { Success = false, Message = "Пользователь не найден!", StatusCode = 404, Error = "NotFound" };
+        
+        user.PhoneNumber = null;
         await _userRepository.SaveChangesAsync();
 
         return new BaseResponse { Success = true, Message = "Номер телефона успешно удален!" };

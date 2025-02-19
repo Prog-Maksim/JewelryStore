@@ -1,4 +1,5 @@
-﻿using JewelryStoreBackend.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using JewelryStoreBackend.Enums;
 using JewelryStoreBackend.Models.DB.User;
 
 namespace JewelryStoreBackend.Models.DB.Order;
@@ -10,12 +11,14 @@ public class Orders
     /// <summary>
     /// Идентификатор заказа
     /// </summary>
-    public string OrderId { get; set; }
+    [MaxLength(11)]
+    public required string OrderId { get; set; }
     
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>
-    public string PersonId { get; set; }
+    [MaxLength(100)]
+    public required string PersonId { get; set; }
     
     /// <summary>
     /// Дата создания заказа
@@ -40,11 +43,12 @@ public class Orders
     /// <summary>
     /// Валюта
     /// </summary>
-    public string Currency { get; set; } 
+    [MaxLength(1)]
+    public required string Currency { get; set; } 
     
     
     public ICollection<OrderProducts> Products { get; set; }
     public OrderPayments Payment { get; set; }
     public OrderShippings Shipping { get; set; }
-    public Person Users { get; set; }
+    public Users Users { get; set; }
 }

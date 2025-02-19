@@ -1,4 +1,5 @@
-﻿using JewelryStoreBackend.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using JewelryStoreBackend.Enums;
 
 namespace JewelryStoreBackend.Models.DB;
 
@@ -9,22 +10,26 @@ public class Coupon
     /// <summary>
     /// Идентификатор купона
     /// </summary>
-    public string CouponId { get; set; }
+    [MaxLength(150)]
+    public required string CouponId { get; set; }
     
     /// <summary>
     /// Код купона
     /// </summary>
-    public string CouponCode { get; set; }
+    [MaxLength(10)]
+    public required string CouponCode { get; set; }
     
     /// <summary>
     /// Название купона
     /// </summary>
-    public string Title { get; set; }
+    [MaxLength(100)]
+    public required string Title { get; set; }
     
     /// <summary>
     /// Описание купона
     /// </summary>
-    public string Description { get; set; }
+    [MaxLength(255)]
+    public string? Description { get; set; }
     
     /// <summary>
     /// Скидка купона
@@ -49,10 +54,12 @@ public class Coupon
     /// <summary>
     /// Категория товаров
     /// </summary>
+    [MaxLength(100)]
     public string? CategoryType { get; set; }
     
     /// <summary>
     /// Языковой код купона
     /// </summary>
-    public string LanguageCode { get; set; }
+    [MaxLength(10)]
+    public required string LanguageCode { get; set; }
 }

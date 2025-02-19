@@ -1,9 +1,9 @@
 ﻿namespace JewelryStoreBackend.Models.Response.Rating;
 
-public class SuccessfulCreatemessage: BaseResponse
+public class SuccessfulCreateMessage: BaseResponse
 {
     /// <summary>
     /// Id созданного комментария
     /// </summary>
-    public string CommentId { get; set; }  
+    public required string CommentId { get; set; }  
 }

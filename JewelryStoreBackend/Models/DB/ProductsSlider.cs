@@ -1,4 +1,6 @@
-﻿namespace JewelryStoreBackend.Models.DB;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace JewelryStoreBackend.Models.DB;
 
 public class ProductsSlider
 {
@@ -7,7 +9,8 @@ public class ProductsSlider
     /// <summary>
     /// Идентификатор продукта для слайдера
     /// </summary>
-    public string SliderProductId { get; set; }
+    [MaxLength(255)]
+    public required string SliderProductId { get; set; }
     
     /// <summary>
     /// Дата добавления
@@ -17,7 +20,8 @@ public class ProductsSlider
     /// <summary>
     /// Идентификатор изображения для слайдера
     /// </summary>
-    public string SliderImageId { get; set; }
+    [MaxLength(100)]
+    public required string SliderImageId { get; set; }
     
     /// <summary>
     /// Дата окончания слайдера

@@ -7,7 +7,7 @@ namespace JewelryStoreBackend.Services;
 public class S3Service
 {
     private readonly AmazonS3Client _s3Client;
-    private readonly string _bucketName = "jewelry";
+    private const string BucketName = "jewelry";
 
     public S3Service()
     {
@@ -30,7 +30,7 @@ public class S3Service
     {
         var deleteRequest = new DeleteObjectRequest
         {
-            BucketName = _bucketName,
+            BucketName = BucketName,
             Key = key
         };
 
@@ -49,7 +49,7 @@ public class S3Service
         {
             var putRequest = new PutObjectRequest
             {
-                BucketName = _bucketName,
+                BucketName = BucketName,
                 Key = key,
                 InputStream = stream
             };

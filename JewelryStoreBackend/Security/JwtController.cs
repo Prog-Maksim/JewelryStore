@@ -26,8 +26,8 @@ public class JwtController
         };
 
         var jwt = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
+            issuer: AuthOptions.Issuer,
+            audience: AuthOptions.Audience,
             claims: claims,
             expires: DateTime.UtcNow.AddDays(AccessTokenLifetimeDay),
             signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
@@ -50,8 +50,8 @@ public class JwtController
         };
         
         var jwt = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
+            issuer: AuthOptions.Issuer,
+            audience: AuthOptions.Audience,
             claims: claims,
             expires: DateTime.UtcNow.AddDays(RefreshTokenLifetimeDay),
             signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
@@ -69,12 +69,12 @@ public class JwtController
         
         var jwtToken = handler.ReadJwtToken(token);
         
-        var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-        var tokenType = jwtToken.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
+        var userId = jwtToken.Claims.First(c => c.Type == ClaimTypes.Name).Value;
+        var tokenType = jwtToken.Claims.First(c => c.Type == "token_type").Value;
         var tokenTypeEnum = Enum.Parse<TokenType>(tokenType);
-        var roles = Enum.Parse<Roles>(jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value);
+        var roles = Enum.Parse<Roles>(jwtToken.Claims.First(c => c.Type == ClaimTypes.Role).Value);
         var versionClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "version")?.Value;
-        var jti = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+        var jti = jwtToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value;
         
         int version = 0;
         if (int.TryParse(versionClaim, out var parsedVersion))
@@ -91,7 +91,7 @@ public class JwtController
         };
     }
     
-    public static bool ValidateRefreshJwtToken(JwtTokenData token, Person user)
+    public static bool ValidateRefreshJwtToken(JwtTokenData token, Users user)
     {
         if (token.TokenType != TokenType.refresh)
             return false;
