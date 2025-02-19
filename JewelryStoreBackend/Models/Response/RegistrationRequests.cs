@@ -11,7 +11,7 @@ public class RegistrationRequests: BaseResponse
     public int TokenExpires { get; set; }
     
     /// <summary>
-    /// access токен для доступа к сайту
+    /// Access токен для доступа к сайту
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? AccessToken { get; set; }

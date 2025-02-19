@@ -1,4 +1,7 @@
-﻿namespace JewelryStoreBackend.Models.DB.Order;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace JewelryStoreBackend.Models.DB.Order;
 
 public class OrderProducts
 {
@@ -7,12 +10,15 @@ public class OrderProducts
     /// <summary>
     /// Идентификатор заказа
     /// </summary>
-    public string OrderId { get; set; }
+    [MaxLength(11)]
+    public required string OrderId { get; set; }
     
     /// <summary>
     /// Идентификатор товара
     /// </summary>
-    public string SKU { get; set; }
+    [MaxLength(20)]
+    [Column("SKU")]
+    public required string Sku { get; set; }
     
     /// <summary>
     /// Стоимость товаров

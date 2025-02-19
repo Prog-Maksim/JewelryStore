@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace JewelryStoreBackend.Models.DB.User;
 
@@ -10,38 +11,44 @@ public class Address
     /// <summary>
     /// Идентификатор адреса
     /// </summary>
-    public string AddressId { get; set; }
+    [MaxLength(150)]
+    public required string AddressId { get; set; }
     
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string PersonId { get; set; }
+    [MaxLength(100)]
+    public required string PersonId { get; set; }
     
     /// <summary>
     /// Страна
     /// </summary>
-    public string Country { get; set; }
+    [MaxLength(150)]
+    public required string Country { get; set; }
     
     /// <summary>
     /// Город
     /// </summary>
-    public string City { get; set; }
+    [MaxLength(200)]
+    public required string City { get; set; }
     
     /// <summary>
     /// Адрес
     /// </summary>
-    public string AddressLine1 { get; set; }
+    [MaxLength(250)]
+    public required string AddressLine1 { get; set; }
     
     /// <summary>
     /// Дополнительный адрес
     /// </summary>
+    [MaxLength(100)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? AddressLine2 { get; set; }
     
     /// <summary>
     /// Почтовый индекс
     /// </summary>
+    [MaxLength(20)]
     public string? PostalCode { get; set; }
     
     /// <summary>
@@ -59,12 +66,14 @@ public class Address
     /// <summary>
     /// Широта
     /// </summary>
+    [MaxLength(100)]
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string lat { get; set; }
+    public string? Lat { get; set; }
     
     /// <summary>
     /// Долгота
     /// </summary>
+    [MaxLength(100)]
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string lon { get; set; }
+    public string? Lon { get; set; }
 }

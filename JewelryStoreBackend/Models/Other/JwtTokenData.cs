@@ -7,7 +7,7 @@ public class JwtTokenData
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>
-    public string UserId { get; set; }
+    public required string UserId { get; set; }
     
     /// <summary>
     /// Тип токена
@@ -24,7 +24,10 @@ public class JwtTokenData
     /// </summary>
     public int Version { get; set; }
     
-
-    public string? Jti { get; set; }
-    public string Token { get; set; }
+    /// <summary>
+    /// Уникальный идентификатор токена
+    /// </summary>
+    public required string Jti { get; set; }
+    
+    public required string Token { get; set; }
 }

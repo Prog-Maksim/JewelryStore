@@ -1,4 +1,5 @@
-﻿using JewelryStoreBackend.Script;
+﻿using System.ComponentModel.DataAnnotations;
+using JewelryStoreBackend.Script;
 
 namespace JewelryStoreBackend.Models.DB.Order;
 
@@ -9,17 +10,20 @@ public class OrderShippings
     /// <summary>
     /// Идентификатор заказа
     /// </summary>
-    public string OrderId { get; set; }
+    [MaxLength(11)]
+    public required string OrderId { get; set; }
     
     /// <summary>
     /// Адрес пользователя
     /// </summary>
-    public string TargetAddress { get; set; }
+    [MaxLength(500)]
+    public required string TargetAddress { get; set; }
     
     /// <summary>
     /// Адрес склада
     /// </summary>
-    public string WarehouseAddress { get; set; }
+    [MaxLength(500)]
+    public required string WarehouseAddress { get; set; }
     
     /// <summary>
     /// Тип доставки

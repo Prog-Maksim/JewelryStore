@@ -42,14 +42,18 @@ public class RatingController(
     [HttpPost("comment")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [ProducesResponseType(typeof(SuccessfulCreatemessage), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessfulCreateMessage), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddNewComment(NewMessage message, string languageCode)
     {
         var dataToken = GetUserIdFromToken();
-        var result = await productService.AddNewCommentAsync(dataToken.UserId, languageCode, message);
-        return StatusCode(result.StatusCode, result);
+        var response = await productService.AddNewCommentAsync(dataToken.UserId, languageCode, message);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -65,15 +69,19 @@ public class RatingController(
     [HttpPut("comment")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [ProducesResponseType(typeof(SuccessfulCreatemessage), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessfulCreateMessage), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateComment(UpdateMessage message)
     {
         var dataToken = GetUserIdFromToken();
-        var result = await productService.UpdateCommentAsync(dataToken, message);
-        return StatusCode(result.StatusCode, result);
+        var response = await productService.UpdateCommentAsync(dataToken, message);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -90,15 +98,19 @@ public class RatingController(
     [HttpDelete("comment")]
     [ServiceFilter(typeof(ValidateUserIpFilter))]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
-    [ProducesResponseType(typeof(SuccessfulCreatemessage), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SuccessfulCreateMessage), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteComment([Required][FromQuery] string sku, [Required][FromQuery] string messageId)
     {
         var dataToken = GetUserIdFromToken();
-        var result = await productService.DeleteCommentAsync(dataToken, sku, messageId);
-        return StatusCode(result.StatusCode, result);
+        var response = await productService.DeleteCommentAsync(dataToken, sku, messageId);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
     
     /// <summary>
@@ -114,8 +126,25 @@ public class RatingController(
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
 
-        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            return Ok(await repository.GetMessagesByProductIdAsync(sku));
+        if (string.IsNullOrWhiteSpace(authHeader) ||
+            !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            var comments = await repository.GetMessagesByProductIdAsync(sku);
+
+            if (!comments.Any())
+            {
+                var error = new BaseResponse
+                {
+                    Message = "Комментарии не найдены",
+                    Success = false,
+                    StatusCode = 404,
+                    Error = "Not found"
+                };
+                return StatusCode(error.StatusCode, error);
+            }
+
+            return Ok(comments);
+        }
         
         var dataToken = GetUserIdFromToken();
         var (response, results) = await productService.GetAllMesageAuthorizeAsync(dataToken, sku);
@@ -182,7 +211,7 @@ public class RatingController(
             return StatusCode(error.StatusCode, error);
         } 
         
-        return Ok(product.likes);
+        return Ok(product.Likes);
     }
 
     /// <summary>
@@ -207,7 +236,11 @@ public class RatingController(
     {
         var dataToken = GetUserIdFromToken();
         var response = await productService.ToggleLikeAsync(dataToken.UserId, languageCode, sku);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
 
     ///  <summary>
@@ -232,6 +265,10 @@ public class RatingController(
     {
         var dataToken = GetUserIdFromToken();
         var response = await productService.IsProductLikedByUserAsync(dataToken.UserId, languageCode, sku);
-        return StatusCode(response.StatusCode, response);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
     }
 }

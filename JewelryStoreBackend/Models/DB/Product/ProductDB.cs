@@ -1,43 +1,103 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace JewelryStoreBackend.Models.DB.Product;
 
-public class ProductDB
+public class ProductDb
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
     
-    public string productId { get; set; }
+    /// <summary>
+    /// Идентификатор продукта
+    /// </summary>
+    [MaxLength(10)]
+    [BsonElement("productId")]
+    public required string ProductId { get; set; }
     
-    public string language { get; set; }
+    /// <summary>
+    /// Языковой код
+    /// </summary>
+    [MaxLength(5)]
+    [BsonElement("language")]
+    public required string Language { get; set; }
     
-    public string title { get; set; }
+    /// <summary>
+    /// Название
+    /// </summary>
+    [MaxLength(100)]
+    [BsonElement("title")]
+    public required string Title { get; set; }
     
-    public bool onSale { get; set; }
+    /// <summary>
+    /// Продается?
+    /// </summary>
+    [BsonElement("onSale")]
+    public bool OnSale { get; set; }
     
-    public string categories { get; set; }
+    /// <summary>
+    /// Категория
+    /// </summary>
+    [BsonElement("categories")]
+    public required string Categories { get; set; }
     
-    public string productType { get; set; }
+    /// <summary>
+    /// Тип товара
+    /// </summary>
+    [BsonElement("productType")]
+    public required string ProductType { get; set; }
     
-    public string? productSubType { get; set; }
+    /// <summary>
+    /// Под тип товара
+    /// </summary>
+    [BsonElement("productSubType")]
+    public string? ProductSubType { get; set; }
 
-    public string description { get; set; }
+    /// <summary>
+    /// Описание
+    /// </summary>
+    [BsonElement("description")]
+    public required string Description { get; set; }
     
-    public int likes { get; set; }
+    /// <summary>
+    /// Лайки
+    /// </summary>
+    [BsonElement("likes")]
+    public int Likes { get; set; }
     
-    public Price price { get; set; }
+    /// <summary>
+    /// Цена
+    /// </summary>
+    [BsonElement("price")]
+    public Price Price { get; set; }
     
-    public List<string>? images { get; set; }
+    /// <summary>
+    /// Идентификаторы изображений
+    /// </summary>
+    [BsonElement("images")]
+    public required List<string> Images { get; set; }
 
-    public Dictionary<string, string> baseAdditionalInformation { get; set; }
+    /// <summary>
+    /// Дополнительная информация
+    /// </summary>
+    [BsonElement("baseAdditionalInformation")]
+    public required Dictionary<string, string> BaseAdditionalInformation { get; set; }
     
-    public List<Specifications>? specifications { get; set; }
+    /// <summary>
+    /// Спецификации товара
+    /// </summary>
+    [BsonElement("specifications")]
+    public required List<Specifications> Specifications { get; set; }
     
-    public DateTime createTimeStamp { get; set; }
+    /// <summary>
+    /// Дата создания
+    /// </summary>
+    [BsonElement("createTimeStamp")]
+    public DateTime CreateTimeStamp { get; set; }
 }
 
 public class Price
@@ -45,27 +105,32 @@ public class Price
     /// <summary>
     /// Цена товара
     /// </summary>
-    public double cost { get; set; }
+    [BsonElement("cost")]
+    public double Cost { get; set; }
     
     /// <summary>
     /// Значек валюты
     /// </summary>
-    public string currency { get; set; }
+    [BsonElement("currency")]
+    public required string Currency { get; set; }
     
     /// <summary>
     /// Есть ли скидка на товар
     /// </summary>
-    public bool discount { get; set; }
+    [BsonElement("discount")]
+    public bool Discount { get; set; }
     
     /// <summary>
     /// Процент скидки
     /// </summary>
-    public int percent { get; set; }
+    [BsonElement("percent")]
+    public int Percent { get; set; }
     
     /// <summary>
     /// Цена со скидкой
     /// </summary>
-    public double costDiscount { get; set; }
+    [BsonElement("costDiscount")]
+    public double CostDiscount { get; set; }
 }
 
 public class Specifications
@@ -73,31 +138,37 @@ public class Specifications
     /// <summary>
     /// Имя характеристики
     /// </summary>
-    public string Name { get; set; }
+    [BsonElement("Name")]
+    public required string Name { get; set; }
     
     /// <summary>
     /// Идентификатор характеристики
     /// </summary>
-    public string specificationId { get; set; }
+    [BsonElement("specificationId")]
+    public required string SpecificationId { get; set; }
     
     /// <summary>
     /// Артикул товара
     /// </summary>
-    public string sku { get; set; }
+    [BsonElement("sku")]
+    public required string Sku { get; set; }
     
     /// <summary>
     /// Название характеристики
     /// </summary>
-    public string item { get; set; }
+    [BsonElement("item")]
+    public required string Item { get; set; }
     
     /// <summary>
     /// Есть в наличие?
     /// </summary>
-    public bool inStock { get; set; }
+    [BsonElement("inStock")]
+    public bool InStock { get; set; }
     
     /// <summary>
     /// Кол-во товарав на складе
     /// </summary>
+    [BsonElement("stockCount")]
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public int stockCount { get; set; }
+    public int StockCount { get; set; }
 }

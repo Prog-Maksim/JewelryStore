@@ -18,18 +18,18 @@ public class UserRepository: IUserRepository
         _database = redis.GetDatabase();
     }
 
-    public async Task<Person?> GetUserByIdAsync(string userId)
+    public async Task<Users?> GetUserByIdAsync(string userId)
     {
         var user = await _context.Users.FirstOrDefaultAsync(p => p.PersonId == userId);
         return user;
     }
     
-    public async Task<Person?> GetUserByEmailAsync(string email)
+    public async Task<Users?> GetUserByEmailAsync(string email)
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task AddUserAsync(Person user)
+    public async Task AddUserAsync(Users user)
     {
         await _context.Users.AddAsync(user);
     }
@@ -44,9 +44,9 @@ public class UserRepository: IUserRepository
         return await _context.Tokens.FirstOrDefaultAsync(t => t.PersonId == userId);
     }
 
-    public async Task<List<Tokens>> GetTokensByPersonIdAsync(string personId)
+    public async Task<List<Tokens>> GetTokensByPersonIdAsync(string userId)
     {
-        return await _context.Tokens.Where(t => t.PersonId == personId).ToListAsync();
+        return await _context.Tokens.Where(t => t.PersonId == userId).ToListAsync();
     }
 
     public async Task SaveChangesAsync()
@@ -83,7 +83,7 @@ public class UserRepository: IUserRepository
         return address;
     }
 
-    public void DeleteAddresses(Address address)
+    public void DeleteAddress(Address address)
     {
         _context.Remove(address);
     }
@@ -93,7 +93,7 @@ public class UserRepository: IUserRepository
         await _context.Address.AddAsync(address);
     }
     
-    public async Task<Person?> GetUserByPhoneNumberAsync(string phoneNumber)
+    public async Task<Users?> GetUserByPhoneNumberAsync(string phoneNumber)
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
     }

@@ -5,37 +5,37 @@ public class Productions
     /// <summary>
     /// Языковой код
     /// </summary>
-    public string languageCode { get; set; }
+    public required string LanguageCode { get; set; }
     
     /// <summary>
     /// Внутренний идентификатор товара
     /// </summary>
-    public string ProductId { get; set; }
+    public required string ProductId { get; set; }
     
     /// <summary>
     /// Идентификатор товара
     /// </summary>
-    public string SKU { get; set; }
+    public required string Sku { get; set; }
     
     /// <summary>
     /// Название товара
     /// </summary>
-    public string Title { get; set; }
+    public required string Title { get; set; }
     
     /// <summary>
     /// Описание товара
     /// </summary>
-    public string Description { get; set; }
+    public required string Description { get; set; }
     
     /// <summary>
     /// Идентификаторы картинок
     /// </summary>
-    public List<string> Images { get; set; }
+    public required List<string> Images { get; set; }
     
     /// <summary>
     /// Цена товара
     /// </summary>
-    public PriceProduction PriceProduction { get; set; }
+    public required PriceProduction PriceProduction { get; set; }
     
     /// <summary>
     /// Кол-во товаров в корзине

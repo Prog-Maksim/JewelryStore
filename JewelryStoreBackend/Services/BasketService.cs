@@ -35,34 +35,37 @@ public class BasketService
         foreach (var item in productInBasket)
         {
             var product = await _productRepository.GetProductByIdAsync(languageCode, item.ProductId);
+            
+            if (product == null)
+                return (new BaseResponse { Success = false, Message = "Товар не найден", StatusCode = 404, Error = "NotFound" }, null);
 
             PriceProduction price = new PriceProduction
             {
-                cost = product.price.cost,
-                currency = product.price.currency,
-                discount = product.price.discount,
-                costDiscount = product.price.costDiscount,
-                percent = product.price.percent,
+                Cost = product.Price.Cost,
+                Currency = product.Price.Currency,
+                Discount = product.Price.Discount,
+                CostDiscount = product.Price.CostDiscount,
+                Percent = product.Price.Percent,
             };
         
             Productions productModel = new Productions
             {
-                languageCode = languageCode,
-                ProductId = product.productId,
-                SKU = item.ProductId,
-                Title = product.title,
-                Description = product.description,
-                Images = product.images,
+                LanguageCode = languageCode,
+                ProductId = product.ProductId,
+                Sku = item.ProductId,
+                Title = product.Title,
+                Description = product.Description,
+                Images = product.Images,
                 Quantity = item.Count,
-                OnSale = product.onSale,
-                InStock = product.specifications.First().inStock,
-                Likes = product.likes,
+                OnSale = product.OnSale,
+                InStock = product.Specifications.First().InStock,
+                Likes = product.Likes,
                 PriceProduction = price,
             };
         
-            priceBasket.Currency = productModel.PriceProduction.currency;
-            priceBasket.Cost += productModel.PriceProduction.cost;
-            priceBasket.CostDiscount += productModel.PriceProduction.costDiscount;
+            priceBasket.Currency = productModel.PriceProduction.Currency;
+            priceBasket.Cost += productModel.PriceProduction.Cost;
+            priceBasket.CostDiscount += productModel.PriceProduction.CostDiscount;
             
             products.Add(productModel);
         }

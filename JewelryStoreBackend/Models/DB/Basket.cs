@@ -1,4 +1,6 @@
-﻿namespace JewelryStoreBackend.Models.DB;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace JewelryStoreBackend.Models.DB;
 
 public class Basket
 {
@@ -7,12 +9,14 @@ public class Basket
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>
-    public string PersonId { get; set; }
+    [MaxLength(100)]
+    public required string PersonId { get; set; }
     
     /// <summary>
     /// Идентификатор товара
     /// </summary>
-    public string ProductId { get; set; }
+    [MaxLength(20)]
+    public required string ProductId { get; set; }
     
     /// <summary>
     /// Кол-во товаров

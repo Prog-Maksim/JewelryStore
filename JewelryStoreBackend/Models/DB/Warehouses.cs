@@ -1,4 +1,6 @@
-﻿namespace JewelryStoreBackend.Models.DB;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace JewelryStoreBackend.Models.DB;
 
 public class Warehouses
 {
@@ -12,20 +14,24 @@ public class Warehouses
     /// <summary>
     /// Название склада
     /// </summary>
-    public string Title { get; set; }
+    [MaxLength(255)]
+    public required string Title { get; set; }
     
     /// <summary>
     /// Адрес склада
     /// </summary>
-    public string Address { get; set; }
+    [MaxLength(255)]
+    public required string Address { get; set; }
     
     /// <summary>
     /// Долгота
     /// </summary>
-    public string lon  { get; set; }
+    [MaxLength(100)]
+    public required string Lon  { get; set; }
     
     /// <summary>
     /// Широта
     /// </summary>
-    public string lat { get; set; }
+    [MaxLength(100)]
+    public required string Lat { get; set; }
 }

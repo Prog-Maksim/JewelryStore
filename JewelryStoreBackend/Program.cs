@@ -64,7 +64,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Logging.ClearProviders();
-builder.Logging.SetMinimumLevel(LogLevel.Error);
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Logging.AddSerilog();
 
 // Swagger
@@ -88,9 +88,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = AuthOptions.ISSUER,
+        ValidIssuer = AuthOptions.Issuer,
         ValidateAudience = true,
-        ValidAudience = AuthOptions.AUDIENCE,
+        ValidAudience = AuthOptions.Audience,
         ValidateLifetime = true,
         IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
         ValidateIssuerSigningKey = true
